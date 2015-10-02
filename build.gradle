@@ -1,0 +1,11 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+jar {
+  manifest {
+    attributes 'Main-Class': 'com.yittlebits.lidc.Extract'
+  }
+}
+
+
+//-*- mode: groovy -*-
