@@ -132,6 +132,40 @@ public class Segmenter {
     json.put("series_instance_uid", seriesInstanceUID);
     json.put("study_instance_uid", studyInstanceUID);
 
+    DicomObject slice = dicomObjects.get(0);
+    json.put("patient_name", slice.getString(Tag.PatientName));
+    json.put("patient_id", slice.getString(Tag.PatientID));
+    json.put("manufacturer", slice.getString(Tag.Manufacturer));
+    json.put("manufacturer_model_name", slice.getString(Tag.ManufacturerModelName));
+    json.put("patient_sex", slice.getString(Tag.PatientSex));
+    json.put("patient_age", slice.getString(Tag.PatientAge));
+    json.put("ethnic_group", slice.getString(Tag.EthnicGroup));
+    json.put("contrast_bolus_agent", slice.getString(Tag.ContrastBolusAgent));
+    json.put("body_part_examined", slice.getString(Tag.BodyPartExamined));
+    json.put("scan_options", slice.getString(Tag.ScanOptions));
+    json.put("slice_thickness", slice.getDouble(Tag.SliceThickness));
+    json.put("kvp", slice.getDouble(Tag.KVP));
+    json.put("data_collection_diameter", slice.getDouble(Tag.DataCollectionDiameter));
+    json.put("software_versions", slice.getString(Tag.SoftwareVersions));
+    json.put("reconstruction_diameter", slice.getDouble(Tag.ReconstructionDiameter));
+    json.put("gantry_detector_tilt", slice.getDouble(Tag.GantryDetectorTilt));
+    json.put("table_height", slice.getDouble(Tag.TableHeight));
+    json.put("rotation_direction", slice.getString(Tag.RotationDirection));
+    json.put("exposure_time", slice.getInt(Tag.ExposureTime));
+    json.put("xray_tube_current", slice.getInt(Tag.XRayTubeCurrent));
+    json.put("exposure", slice.getInt(Tag.Exposure));
+    json.put("convolution_kernel", slice.getString(Tag.ConvolutionKernel));
+    json.put("patient_position", slice.getString(Tag.PatientPosition));
+
+    ArrayNode a = json.putArray("image_position_patient");
+    for (double v : slice.getDoubles(Tag.ImagePositionPatient)) {
+      a.add(v);
+    }
+    a = json.putArray("image_orientation_patient");
+    for (double v : slice.getDoubles(Tag.ImageOrientationPatient)) {
+      a.add(v);
+    }
+
     ArrayNode readArray = json.putArray("reads");
 
     // Loop over each
@@ -141,11 +175,11 @@ public class Segmenter {
       readIndex++;
       String filename = "read-" + readIndex + ".nii.gz";
       ObjectNode readNode = readArray.addObject();
-      readNode.put("index", readIndex);
       readNode.put("filename", filename);
       NiftiVolume volume = createVolume();
       ArrayNode nodules = readNode.putArray("nodules");
       ArrayNode smallNodules = readNode.putArray("small_nodules");
+      double labelValue = 1.0;
 
       // Find all the nodules
       for (Node nodule : toList((NodeList) xpath.evaluate("./unblindedReadNodule", read, XPathConstants.NODESET))) {
@@ -193,7 +227,7 @@ public class Segmenter {
             pointCount++;
 
             // Write to the file
-            volume.data.set((int) x, (int) (ny - 1 - y), z, 0, 1.0);
+            volume.data.set((int) x, (int) (ny - 1 - y), z, 0, labelValue);
           }
         }
         ArrayNode centroid = noduleNode.putArray("centroid");
@@ -201,6 +235,8 @@ public class Segmenter {
         centroid.add(ny - 1 - cy / (double) pointCount);
         centroid.add(cz / (double) pointCount);
         noduleNode.put("point_count", pointCount);
+        noduleNode.put("label_value", labelValue);
+        labelValue += 1.0;
       }
       logger.fine("Writing Read: " + readIndex);
       volume.write(new File(outputDirectory, filename).getPath());
