@@ -7,6 +7,9 @@ repositories {
   maven {
     url "http://www.dcm4che.org/maven2"
   }
+  maven {
+    url "http://nexus.bedatadriven.com/content/groups/public/"
+  }
 }
 
 dependencies {
@@ -17,6 +20,9 @@ dependencies {
     "dcm4che:dcm4che-image:2.0.24",
     "dcm4che:dcm4che-filecache:2.0.24",
     'org.slf4j:slf4j-jdk14:1.7.12',
+    'org.renjin.cran:oro.nifti:0.4.3-b203',
+    'com.fasterxml.jackson.core:jackson-core:2.6.3',
+    'com.fasterxml.jackson.core:jackson-databind:2.6.3',
   )
 }
 
