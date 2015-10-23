@@ -179,7 +179,7 @@ public class Segmenter {
       NiftiVolume volume = createVolume();
       ArrayNode nodules = readNode.putArray("nodules");
       ArrayNode smallNodules = readNode.putArray("small_nodules");
-      double labelValue = 1.0;
+      int labelValue = 1;
 
       // Find all the nodules
       for (Node nodule : toList((NodeList) xpath.evaluate("./unblindedReadNodule", read, XPathConstants.NODESET))) {
@@ -236,7 +236,7 @@ public class Segmenter {
         centroid.add(cz / (double) pointCount);
         noduleNode.put("point_count", pointCount);
         noduleNode.put("label_value", labelValue);
-        labelValue += 1.0;
+        labelValue += 1;
       }
       logger.fine("Writing Read: " + readIndex);
       volume.write(new File(outputDirectory, filename).getPath());

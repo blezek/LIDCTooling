@@ -1,0 +1,19 @@
+#!/bin/sh
+
+XMLS=$(find LIDC-XML-only/tcia-lidc-xml -name "*.xml" | head)
+APIKEY=25f0025c-071c-426d-b15a-199421e2e889
+
+for XML in $XMLS; do
+    SeriesInstanceUID=$(build/install/LIDCTooling/bin/Extract SeriesInstanceUID $XML)
+    echo "Processing $XML -- $SeriesInstanceUID"
+    mkdir -p dicom/$SeriesInstanceUID
+    wget -O /tmp/$SeriesInstanceUID.zip --quiet --header "api_key: $APIKEY" "https://services.cancerimagingarchive.net/services/v3/TCIA/query/getImage?SeriesInstanceUID=$SeriesInstanceUID"
+
+    unzip -qq -o /tmp/$SeriesInstanceUID.zip -d dicom/$SeriesInstanceUID
+    rm -f /tmp/$SeriesInstanceUID.zip
+
+    ### Extract the ROIs and generate JSON
+    mkdir -p segmented/$SeriesInstanceUID
+    build/install/LIDCTooling/bin/Extract segment $XML dicom/$SeriesInstanceUID segmented/$SeriesInstanceUID
+
+done

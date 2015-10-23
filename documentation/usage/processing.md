@@ -2,7 +2,56 @@
 
 ## Example
 
+### Get the LIDC XML Files
 
+```
+wget 'https://wiki.cancerimagingarchive.net/download/attachments/3539039/LIDC-XML-only.tar.gz'
+mkdir -p LIDC-XML-only
+cd LIDC-XML-only
+tar fxvz ../LIDC-XML-only.tar.gz
+cd ..
+```
+
+### Set some useful variables
+
+```
+XML=LIDC-XML-only/tcia-lidc-xml/157/158.xml
+APIKEY=25f0025c-071c-426d-b15a-199421e2e889
+```
+
+### Extract a SeriesInstanceUID from an XML file
+
+```
+SeriesInstanceUID=$(build/install/LIDCTooling/bin/Extract SeriesInstanceUID $XML)
+
+# 1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824
+echo $SeriesInstanceUID
+```
+
+### Download the image data
+
+```
+mkdir -p dicom/$SeriesInstanceUID
+wget -O /tmp/$SeriesInstanceUID.zip --quiet --header "api_key: $APIKEY" "https://services.cancerimagingarchive.net/services/v3/TCIA/query/getImage?SeriesInstanceUID=$SeriesInstanceUID"
+
+unzip -qq -o /tmp/$SeriesInstanceUID.zip -d dicom/$SeriesInstanceUID
+```
+
+### Extract the ROIs and generate JSON
+
+```
+mkdir -p segmented/$SeriesInstanceUID
+build/install/LIDCTooling/bin/Extract segment $XML dicom/$SeriesInstanceUID segmented/$SeriesInstanceUID
+```
+
+### `reads.json`
+
+The final result of the processing is a file named [segmented/$SeriesInstanceUID/reads.json](usage/reads.json).  It contains information about the original DICOM images, each read, nodules and small nodules found by each radiologist and pointers to a label map for each.
+
+
+## Procesing in bulk
+
+The `extract` script will process all the files, in bulk.
 
 ## Tools
 
