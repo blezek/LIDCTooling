@@ -45,3 +45,7 @@ segment: dicom
 	mkdir -p dicom-segmented
 	./gradlew jar
 	(cd build/libs && java -jar LIDCTooling.jar segment ${DIR}/LIDC-XML-only/tcia-lidc-xml/157/158.xml ${DIR}/dicom ${DIR}/dicom-segmented)
+
+
+gather:
+	./gather

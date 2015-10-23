@@ -30,7 +30,7 @@ func main() {
 			Usage: "format to download",
 		},
 	}
-	app.Commands = []cli.Command{QueryCommand, FetchCommand}
+	app.Commands = []cli.Command{QueryCommand, FetchCommand, GatherCommand}
 	app.Before = func(context *cli.Context) error {
 		configureLogging(context.Bool("verbose"))
 		return nil
