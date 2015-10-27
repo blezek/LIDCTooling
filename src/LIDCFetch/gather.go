@@ -1,11 +1,10 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/antonholmquist/jason"
 	"github.com/codegangsta/cli"
 	_ "github.com/jmoiron/jsonq"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,7 +25,7 @@ func Exists(name string) bool {
 }
 
 func Run(name string, arg ...string) (string, error) {
-	t, err := exec.Command(name, arg...).Output()
+	t, err := exec.Command(name, arg...).CombinedOutput()
 	return strings.TrimSpace(string(t)), err
 }
 
@@ -51,27 +50,35 @@ func gather(context *cli.Context) {
 
 		// Now parse the JSON
 		JsonFile := filepath.Join(SegmentedDir, "reads.json")
-		fid, err := os.Open(JsonFile)
-		var i interface{}
-		contents, _ := ioutil.ReadFile(JsonFile)
-		json.Unmarshal(contents, &i)
-		everything := i.(map[string]interface{})
-		reads := everything["reads"].([]interface{})
-		for _, r := range reads {
-			read := r.(map[string]interface{})
-			logger.Debug("reads: %+v", read)
-			filename := read["filename"].(string)
+		fid, _ := os.Open(JsonFile)
+
+		everything, _ := jason.NewObjectFromReader(fid)
+		originalFile, _ := everything.GetString("filename")
+		reads, _ := everything.GetObjectArray("reads")
+		for _, read := range reads {
+			// Looping over all the reads
+			logger.Debug("read: %+v", read)
+			filename, _ := read.GetString("filename")
+			readId, _ := read.GetInt64("id")
 			logger.Debug("Filename: %v", filename)
-			for _, n := range read["nodules"].([]interface{}) {
-				nodule := n.(map[string]interface{})
-				id := nodule["id"].(string)
-				centroid := make([]float64, 0)
-				for _, v := range nodule["centroid"].([]interface{}) {
-					centroid = append(centroid, v.(float64))
-				}
-				label_value := nodule["label_value"].(float64)
+			nodules, _ := read.GetObjectArray("nodules")
+			for _, nodule := range nodules {
+				id, _ := nodule.GetString("id")
+				centroid, _ := nodule.GetFloat64Array("centroidLPS")
+				label_value, _ := nodule.GetFloat64("label_value")
 				logger.Debug("Nodule id: %v label: %v centroid: %v", id, label_value, centroid)
 
+				// Process the lesion
+				GLS := "/Users/blezek/Source/ChestImagingPlatform/build/CIP-build/bin/GenerateLesionSegmentation"
+				input := filepath.Join(SegmentedDir, originalFile)
+				output := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v_nodule_%v.nii.gz", readId, id))
+				seed := fmt.Sprintf("%v,%v,%v", centroid[0], centroid[1], centroid[2])
+				out, err := Run(GLS, "-i", input, "-o", output, "--seeds", seed)
+				logger.Info("Command line: %v", fmt.Sprintf("%v -i %v -o %v --seeds %v", GLS, input, output, seed))
+				if err != nil {
+					logger.Error("Error running %v -- %v\nOutput:%v", GLS, err.Error(), out)
+					logger.Error("Command line: %v", fmt.Sprintf("%v -i %v -o %v --seeds", GLS, input, output, seed))
+				}
 			}
 		}
 	}
