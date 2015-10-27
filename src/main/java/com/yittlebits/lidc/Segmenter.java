@@ -4,8 +4,11 @@ import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -14,11 +17,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
-import niftijio.NiftiHeader;
-import niftijio.NiftiVolume;
 
 import org.apache.commons.cli.CommandLine;
 import org.dcm4che2.data.DicomObject;
@@ -32,6 +31,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import niftijio.NiftiHeader;
+import niftijio.NiftiVolume;
 
 public class Segmenter {
   static Logger logger = Logger.getLogger(Segmenter.class.getName());
@@ -84,10 +86,6 @@ public class Segmenter {
     }
 
     // Save each reading session as a NII file
-
-    // Save base image
-    saveBaseImage();
-
     // Save reader images
     saveReaderImages();
 
@@ -166,9 +164,14 @@ public class Segmenter {
       a.add(v);
     }
 
-    ArrayNode readArray = json.putArray("reads");
+    // Save base image
+    String baseImageFilename = saveBaseImage();
+    json.put("filename", baseImageFilename);
+
+    //
 
     // Loop over each
+    ArrayNode readArray = json.putArray("reads");
     NodeList reads = (NodeList) xpath.compile("/LidcReadMessage/readingSession").evaluate(doc, XPathConstants.NODESET);
     int readIndex = -1;
     for (Node read : toList(reads)) {
@@ -176,6 +179,7 @@ public class Segmenter {
       String filename = "read-" + readIndex + ".nii.gz";
       ObjectNode readNode = readArray.addObject();
       readNode.put("filename", filename);
+      readNode.put("id", readIndex);
       NiftiVolume volume = createVolume();
       ArrayNode nodules = readNode.putArray("nodules");
       ArrayNode smallNodules = readNode.putArray("small_nodules");
@@ -205,7 +209,7 @@ public class Segmenter {
         noduleNode.put("id", getString("./noduleID/text()", nodule));
         double cx = 0.0, cy = 0.0, cz = 0.0;
         int pointCount = 0;
-
+        Set<Integer> roiSlices = new HashSet<>();
         for (Node roi : toList((NodeList) xpath.evaluate("./roi", nodule, XPathConstants.NODESET))) {
           String instanceUID = (String) xpath.evaluate("./imageSOP_UID/text()", roi, XPathConstants.STRING);
           logger.fine("\tROI on slice: " + instanceUID);
@@ -217,6 +221,7 @@ public class Segmenter {
           }
 
           int z = uidToIndex.get(instanceUID);
+          roiSlices.add(z);
           // Find the Regions
           for (Node point : toList((NodeList) xpath.evaluate("./edgeMap", roi, XPathConstants.NODESET))) {
             double x = (Double) xpath.evaluate("./xCoord/text()", point, XPathConstants.NUMBER);
@@ -227,15 +232,34 @@ public class Segmenter {
             pointCount++;
 
             // Write to the file
-            volume.data.set((int) x, (int) (ny - 1 - y), z, 0, labelValue);
+            volume.data.set((int) x, (int) y, z, 0, labelValue);
           }
         }
+        cx = cx / (double) pointCount;
+        cy = cy / (double) pointCount;
+        cz = cz / (double) pointCount;
         ArrayNode centroid = noduleNode.putArray("centroid");
-        centroid.add(cx / (double) pointCount);
-        centroid.add(ny - 1 - cy / (double) pointCount);
-        centroid.add(cz / (double) pointCount);
+        centroid.add(cx);
+        centroid.add(cy);
+        centroid.add(cz);
+        double[] pixelSpacing = dicomObjects.get(0).getDoubles(Tag.PixelSpacing);
+        double sliceSpacing = dicomObjects.get(0).getDouble(Tag.SliceThickness);
+
+        ArrayNode centroidLPS = noduleNode.putArray("centroidLPS");
+        centroidLPS.add(cx * pixelSpacing[0]);
+        centroidLPS.add(cy * pixelSpacing[1]);
+        centroidLPS.add(cz * sliceSpacing);
+
         noduleNode.put("point_count", pointCount);
         noduleNode.put("label_value", labelValue);
+
+        // Fill?
+        if (pointCount > 1) {
+          for (int z : roiSlices) {
+            noduleNode.put("filled", fill(volume, cx, cy, z, labelValue));
+          }
+        }
+
         labelValue += 1;
       }
       logger.fine("Writing Read: " + readIndex);
@@ -246,7 +270,30 @@ public class Segmenter {
     writer.writeValue(new File(outputDirectory, "reads.json"), json);
   }
 
-  private void saveBaseImage() throws Exception {
+  /** Returns status of fill, false means we exceeded limits. */
+  private boolean fill(NiftiVolume volume, double cx, double cy, double cz, int labelValue) {
+    Stack<Point3> stack = new Stack<>();
+    stack.add(new Point3((int) cx, (int) cy, (int) cz));
+    int count = 0;
+    while (!stack.isEmpty()) {
+      Point3 p = stack.pop();
+      count++;
+      double v = volume.data.get(p.x, p.y, p.z, 0);
+      if (v != labelValue) {
+        volume.data.set(p.x, p.y, p.z, 0, labelValue);
+        stack.push(new Point3(p.x, p.y + 1, p.z));
+        stack.push(new Point3(p.x, p.y - 1, p.z));
+        stack.push(new Point3(p.x + 1, p.y, p.z));
+        stack.push(new Point3(p.x - 1, p.y, p.z));
+      }
+      if (count > 4000) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private String saveBaseImage() throws Exception {
     NiftiVolume volume = createVolume();
 
     for (int k = 0; k < nz; k++) {
@@ -269,13 +316,14 @@ public class Segmenter {
             newPixel = 0.0;
           }
           // Flip Y...
-          volume.data.set(i, ny - j - 1, k, 0, newPixel);
+          volume.data.set(i, j, k, 0, newPixel);
         }
       }
     }
     logger.fine("Saving example volume");
-    volume.write(new File(outputDirectory, "image.nii.gz").getPath());
-
+    String filename = "image.nii.gz";
+    volume.write(new File(outputDirectory, filename).getPath());
+    return filename;
   }
 
   private void loadDICOM() throws Exception {
@@ -298,7 +346,7 @@ public class Segmenter {
     // index by uid, how easy is that!
     uidToInstance = dicomObjects.stream().collect(Collectors.toMap(item -> {
       return item.getString(Tag.SOPInstanceUID);
-    }, item -> item));
+    } , item -> item));
     // Get the image dimensions
     ny = dicomObjects.get(0).getInt(Tag.Rows);
     nx = dicomObjects.get(0).getInt(Tag.Columns);
