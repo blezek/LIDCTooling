@@ -6,7 +6,7 @@ DIR:=$(shell pwd)
 define help
 
 Makefile for LIDCFetch
-  build   - build the corsair app
+  build   - build the LIDCFetch app
   test    - run the tests
   vet     - look for trouble in the code...
   segment - Grab some files and segment
