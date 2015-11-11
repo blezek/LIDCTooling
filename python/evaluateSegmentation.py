@@ -36,6 +36,10 @@ gold_standard = sitk.BinaryThreshold(gold_standard, lowerThreshold=label, upperT
 ruler = sitk.LabelOverlapMeasuresImageFilter()
 overlap = ruler.Execute(segmentation,gold_standard)
 
+# Compute Hausdorff distance
+hd = sitk.HausdorffDistanceImageFilter()
+hd.Execute(segmentation,gold_standard)
+
 measures = {
     "false_negative_error": ruler.GetFalseNegativeError(),
     "false_positive_error": ruler.GetFalsePositiveError(),
@@ -43,7 +47,9 @@ measures = {
     "union_overlap": ruler.GetUnionOverlap(),
     "volume_similarity": ruler.GetVolumeSimilarity(),
     "jaccard_coefficient": ruler.GetJaccardCoefficient(),
-    "dice_coefficient": ruler.GetDiceCoefficient()
+    "dice_coefficient": ruler.GetDiceCoefficient(),
+    "hausdorff_distance": hd.GetHausdorffDistance(),
+    "average_hausdorff_distance": hd.GetAverageHausdorffDistance(),
     }
 
 fid = open(jsonOutput, 'w')

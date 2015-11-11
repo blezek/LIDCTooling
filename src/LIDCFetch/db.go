@@ -118,3 +118,8 @@ create table if not exists measure (
 )`
 
 var create_tables = map[string]string{"series": create_series_table, "read": create_read_table, "nodule": create_nodule_table, "measure": create_measure_table}
+
+var db_migrations = []string{
+	"alter table measure add column hausdorff_distance float",
+	"alter table measure add column average_hausdorff_distance float",
+}

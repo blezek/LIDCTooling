@@ -53,6 +53,13 @@ func gather(context *cli.Context) {
 			os.Exit(1)
 		}
 	}
+	for _, s := range db_migrations {
+		err = db.Exec(s)
+		if err != nil {
+			logger.Error("Could not apply migration (%v): %v", s, err.Error())
+			os.Exit(1)
+		}
+	}
 
 	var args []string
 	// Arguments are a list of XML files

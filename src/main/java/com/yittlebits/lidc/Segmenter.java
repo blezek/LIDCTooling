@@ -128,6 +128,7 @@ public class Segmenter {
     String seriesInstanceUID = (String) xpath.compile("/LidcReadMessage/ResponseHeader/SeriesInstanceUid/text()").evaluate(doc, XPathConstants.STRING);
     String studyInstanceUID = (String) xpath.compile("/LidcReadMessage/ResponseHeader/StudyInstanceUID/text()").evaluate(doc, XPathConstants.STRING);
     json.put("series_instance_uid", seriesInstanceUID);
+    json.put("uid", seriesInstanceUID);
     json.put("study_instance_uid", studyInstanceUID);
 
     DicomObject slice = dicomObjects.get(0);
@@ -168,7 +169,9 @@ public class Segmenter {
     String baseImageFilename = saveBaseImage();
     json.put("filename", baseImageFilename);
 
-    //
+    // Normalize nodule ids by tracking distance to all other nodules. Set a
+    // minimum distance in mm for merging nodules.
+    NoduleNormalizer normalizer = new NoduleNormalizer(50);
 
     // Loop over each
     ArrayNode readArray = json.putArray("reads");
@@ -176,10 +179,11 @@ public class Segmenter {
     int readIndex = -1;
     for (Node read : toList(reads)) {
       readIndex++;
-      String filename = "read-" + readIndex + ".nii.gz";
+      String filename = "read_" + readIndex + ".nii.gz";
       ObjectNode readNode = readArray.addObject();
       readNode.put("filename", filename);
       readNode.put("id", readIndex);
+      readNode.put("uid", seriesInstanceUID + "-" + readIndex);
       NiftiVolume volume = createVolume();
       ArrayNode nodules = readNode.putArray("nodules");
       ArrayNode smallNodules = readNode.putArray("small_nodules");
@@ -207,6 +211,7 @@ public class Segmenter {
         }
 
         noduleNode.put("id", getString("./noduleID/text()", nodule));
+
         double cx = 0.0, cy = 0.0, cz = 0.0;
         int pointCount = 0;
         Set<Integer> roiSlices = new HashSet<>();
@@ -245,13 +250,18 @@ public class Segmenter {
         double[] pixelSpacing = dicomObjects.get(0).getDoubles(Tag.PixelSpacing);
         double sliceSpacing = dicomObjects.get(0).getDouble(Tag.SliceThickness);
 
+        DoublePoint3 centroidPoint = new DoublePoint3(cx * pixelSpacing[0], cy * pixelSpacing[1], cz * sliceSpacing);
         ArrayNode centroidLPS = noduleNode.putArray("centroidLPS");
-        centroidLPS.add(cx * pixelSpacing[0]);
-        centroidLPS.add(cy * pixelSpacing[1]);
-        centroidLPS.add(cz * sliceSpacing);
+        centroidLPS.add(centroidPoint.x);
+        centroidLPS.add(centroidPoint.y);
+        centroidLPS.add(centroidPoint.z);
+
+        int normalizeNoduleIdx = normalizer.getNormalizedId(centroidPoint);
 
         noduleNode.put("point_count", pointCount);
         noduleNode.put("label_value", labelValue);
+        noduleNode.put("normalized_nodule_id", normalizeNoduleIdx);
+        noduleNode.put("uid", seriesInstanceUID + "-" + readIndex + "." + normalizeNoduleIdx);
 
         // Fill?
         if (pointCount > 1) {
