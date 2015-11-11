@@ -49,6 +49,7 @@ func fetchImage(context *cli.Context) {
 	}
 	defer resp.Body.Close()
 
+	logger.Debug("Response: %+v", resp)
 	// Do we extract somewhere?
 	if context.String("extract") == "" {
 		logger.Debug("Saving to %v", OutputZip)
@@ -79,6 +80,7 @@ func fetchImage(context *cli.Context) {
 			return
 		}
 		fid.Close()
+		logger.Debug("Finished saving to %v", fid.Name())
 		// Unzip in the specified location
 		z, err := zip.OpenReader(fid.Name())
 		if err != nil {

@@ -33,6 +33,7 @@ doc:
 	godoc -http=:6060 -goroot=../go
 
 build: bin/LIDCFetch
+	./gradlew installDist
 
 bin/LIDCFetch: deps
 	go install -ldflags "-X main.Version=${VERSION}" LIDCFetch

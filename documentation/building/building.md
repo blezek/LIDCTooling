@@ -10,7 +10,7 @@ cd ChestImagingPlatform
 mkdir build
 cd build
 cmake ..
-make
+make # wait for it...
 ```
 
 # LIDCTooling

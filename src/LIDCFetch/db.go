@@ -2,37 +2,41 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/antonholmquist/jason"
 	"github.com/mxk/go-sqlite/sqlite3"
 )
 
 func Save(db *sqlite3.Conn, table string, uid string, obj *jason.Object) error {
-	handle_err := func(e error) {
+	handle_err := func(col string, e error) {
 		if e != nil {
-			logger.Error("Error: %v", e.Error())
+			logger.Error("Error inserting %v into %v: %v", col, table, e.Error())
 		}
 	}
 
 	err := db.Exec(fmt.Sprintf("insert or ignore into %v ( uid ) values (?)", table), uid)
-	handle_err(err)
+	handle_err("", err)
 	for k, v := range obj.Map() {
+		if k == "uid" {
+			continue
+		}
 		// Are we a string or a number?
 		if i, err := v.Int64(); err == nil {
 			err = db.Exec(fmt.Sprintf("update %v set %v = ? where uid = ?", table, k), i, uid)
-			handle_err(err)
+			handle_err(k, err)
 		}
 		if f, err := v.Float64(); err == nil {
 			err = db.Exec(fmt.Sprintf("update %v set %v = ? where uid = ?", table, k), f, uid)
-			handle_err(err)
+			handle_err(k, err)
 		}
 		if s, err := v.String(); err == nil {
 			err = db.Exec(fmt.Sprintf("update %v set %v = ? where uid = ?", table, k), s, uid)
-			handle_err(err)
+			handle_err(k, err)
 		}
 		if arr, err := obj.GetFloat64Array(k); err == nil {
 			s := fmt.Sprintf("%v", arr)
 			err = db.Exec(fmt.Sprintf("update %v set %v = ? where uid = ?", table, k), s, uid)
-			handle_err(err)
+			handle_err(k, err)
 		}
 	}
 	return err
@@ -71,25 +75,15 @@ create table if not exists series (
   filename text )
 `
 var create_read_table = `
-create table if not exists read (
+create table if not exists reads (
   uid text primary key,
-  series_uid text,
-  filename text,
-  id text
-)
-`
-
-var create_nodule_table = `
-create table if not exists nodule (
-  uid text primary key,
-  read_uid text,
+  nodule_uid text,
+  normalized_nodule_id int,
   id text,
-  nodule_id text,
   centroid text,
   centroidLPS text,
   point_count int,
   label_value int,
-  normalized_nodule_id int,
   filled int,
   subtlety int,
   internalStructure int,
@@ -103,10 +97,19 @@ create table if not exists nodule (
 )
 `
 
+var create_nodule_table = `
+create table if not exists nodules (
+  uid text primary key,
+  series_uid text,
+  normalized_nodule_id int
+)
+`
+
 var create_measure_table = `
-create table if not exists measure (
+create table if not exists measures (
   uid text primary key,
   nodule_uid text,
+  read_uid text,
   command_line text,
   false_negative_error float,
   dice_coefficient float,
@@ -114,12 +117,11 @@ create table if not exists measure (
   false_positive_error float,
   mean_overlap float,
   union_overlap float,
-  jaccard_coefficient float
+  jaccard_coefficient float,
+  hausdorff_distance float,
+  average_hausdorff_distance float
 )`
 
-var create_tables = map[string]string{"series": create_series_table, "read": create_read_table, "nodule": create_nodule_table, "measure": create_measure_table}
+var create_tables = map[string]string{"series": create_series_table, "reads": create_read_table, "nodules": create_nodule_table, "measures": create_measure_table}
 
-var db_migrations = []string{
-	"alter table measure add column hausdorff_distance float",
-	"alter table measure add column average_hausdorff_distance float",
-}
+var db_migrations = []string{}
