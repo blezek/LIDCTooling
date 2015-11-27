@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Build instructions for Vagrant (Ubuntu trusty64)
+NPROC=`getconf _NPROCESSORS_ONLN`
 
 ### Install our packages
 sudo apt-get install -y cmake curl git subversion clang freeglut3-dev libxml2-dev g++ python-pip python-virtualenv
@@ -35,7 +36,7 @@ mkdir -p ChestImagingPlatform-build
 cd ChestImagingPlatform-build
 git checkout develop
 cmake ../ChestImagingPlatform/
-make -j 4
+make -j $NPROC
 make
 
 ### Build the LIDC code
