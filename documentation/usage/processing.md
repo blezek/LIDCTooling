@@ -17,6 +17,7 @@ cd ..
 ```
 XML=LIDC-XML-only/tcia-lidc-xml/157/158.xml
 APIKEY=25f0025c-071c-426d-b15a-199421e2e889
+APIKEY=864dcc73-ce40-4f19-8a3e-fce71fc2dba2
 ```
 
 ### Extract a SeriesInstanceUID from an XML file
@@ -59,6 +60,14 @@ Example:
 make build
 bin/LIDCFetch gather bin/LIDCFetch gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
 ```
+
+Example of processing all the data:
+
+```bash
+make build
+find bin/LIDCFetch gather bin/LIDCFetch gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
+```
+
 
 ## Tools
 

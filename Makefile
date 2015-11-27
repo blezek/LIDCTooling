@@ -41,7 +41,6 @@ bin/LIDCFetch: deps
 dicom: build
 	bin/LIDCFetch fetch image --extract dicom/ 1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824
 
-
 segment: dicom
 	mkdir -p dicom-segmented
 	./gradlew jar
