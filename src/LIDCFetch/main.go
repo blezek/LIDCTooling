@@ -54,7 +54,7 @@ func main() {
 func configureLogging(verbose bool) {
 	backend := log.NewLogBackend(os.Stdout, "", 0)
 	f := "%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x} %{message}"
-	f = "%{color}%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x}%{color:reset} %{message}"
+	//	f = "%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x} %{message}"
 	format := log.MustStringFormatter(f)
 	formatter := log.NewBackendFormatter(backend, format)
 	log.SetBackend(formatter)

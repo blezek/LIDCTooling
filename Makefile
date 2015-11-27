@@ -2,6 +2,8 @@ export GOPATH:=$(shell pwd)
 # Build version
 VERSION:=$(shell git describe --always)-$(shell date +%F-%H-%M)
 DIR:=$(shell pwd)
+CLUSTER ?= test
+TEMPLATE ?= smallcluster
 
 define help
 
@@ -10,6 +12,11 @@ Makefile for LIDCFetch
   test    - run the tests
   vet     - look for trouble in the code...
   segment - Grab some files and segment
+
+Cluster (make CLUSTER=test)
+  cluster-start      - start up starcluster
+  cluster-terminate  - terminate (destroy) starcluster
+  cluster-install    - copy ClusterSoftware to /software
 
 Example:
 make build
@@ -48,3 +55,15 @@ segment: dicom
 
 test: build
 	go test LIDCFetch/...
+
+cluster-ssh:
+	(source venv/bin/activate && starcluster sshmaster --user sgeadmin ${CLUSTER})
+
+cluster-start:
+	(source venv/bin/activate && starcluster start -c ${TEMPLATE} ${CLUSTER})
+
+cluster-terminate:
+	(source venv/bin/activate && starcluster terminate --confirm ${CLUSTER})
+
+cluster-install:
+	devops/cluster-install.sh ${CLUSTER}
