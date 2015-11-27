@@ -51,7 +51,14 @@ The final result of the processing is a file named [segmented/$SeriesInstanceUID
 
 ## Procesing in bulk
 
-The `extract` script will process all the files, in bulk.
+The `LIDCFetch` application can automatically process an entire `XML` file containing reads.
+
+Example:
+
+```bash
+make build
+bin/LIDCFetch gather bin/LIDCFetch gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
+```
 
 ## Tools
 
