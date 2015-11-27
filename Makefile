@@ -65,5 +65,8 @@ cluster-start:
 cluster-terminate:
 	(source venv/bin/activate && starcluster terminate --confirm ${CLUSTER})
 
+cluster-loadbalance:
+	(source venv/bin/activate && starcluster loadbalance -m 10 -w 10 -a 4 ${CLUSTER})
+
 cluster-install:
 	devops/cluster-install.sh ${CLUSTER}
