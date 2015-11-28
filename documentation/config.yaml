@@ -1,0 +1,14 @@
+baseurl: "/"
+languageCode: "en-us"
+title: "LIDCTooling"
+pluralizelisttitles: "false"
+
+# Menus
+menu:
+  main:
+    - Name: "Building"
+      Weight: -100
+      URL: "/building/"
+    - Name: "Usage"
+      Weight: -90
+      URL: "/usage/"

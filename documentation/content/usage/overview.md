@@ -1,3 +1,8 @@
+---
+title: "Processing Overview"
+weight: -100
+---
+
 # LIDC Data conversion
 
 Making LIDC annotations available as DICOM Segmentation Objects.

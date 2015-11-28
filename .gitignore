@@ -14,3 +14,6 @@ documentation/node_modules
 venv
 .vagrant
 ClusterSoftware
+hugo.pid
+documentation/bower_components
+documentation/public

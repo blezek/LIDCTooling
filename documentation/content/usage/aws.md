@@ -1,3 +1,8 @@
+---
+title: "Processing on AWS"
+weight: -80
+---
+
 # Processing on AWS
 
 Processing the required data (1300+ studies) can be efficiently done using cluster computing.  A [StarCluster](http://star.mit.edu/cluster/docs/latest/index.html) is an on-demand AWS cluster of any size.
