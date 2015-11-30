@@ -1,0 +1,83 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="/css/foundation.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+  </head>
+  <body>
+
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <ul class="dropdown menu" data-dropdown-menu>
+          <li class="menu-text"><a href="/">LIDCTooling</a></li>
+          <li class="has-submenu">
+            
+          <li><a href="/building/">Building</a></li>
+          
+          <li><a href="/usage/">Usage</a></li>
+          
+        </ul>
+      </div>
+    </div>
+    
+
+    <div class="row">
+      <div class="large-12 columns">
+        
+
+<h1 id="building-the-tools:d47eb01f2f5fb68fde724a1ba6cd27d5">Building the tools</h1>
+
+<h1 id="chest-imaging-platform:d47eb01f2f5fb68fde724a1ba6cd27d5">Chest Imaging Platform</h1>
+
+<p>Building the <a href="https://github.com/acil-bwh/ChestImagingPlatform">Chest Imaging Platform</a> is relatively easy:</p>
+
+<pre><code class="language-bash">git clone https://github.com/acil-bwh/ChestImagingPlatform.git
+cd ChestImagingPlatform
+mkdir build
+cd build
+cmake ..
+make # wait for it...
+</code></pre>
+
+<h1 id="lidctooling:d47eb01f2f5fb68fde724a1ba6cd27d5">LIDCTooling</h1>
+
+<h2 id="lidcfetch:d47eb01f2f5fb68fde724a1ba6cd27d5">LIDCFetch</h2>
+
+<p><code>LIDCFetch</code> interacts with the LIDC website to fetch DICOM images.</p>
+
+<pre><code>git clone git@github.com:dblezek/LIDCTooling.git
+cd LIDCTooling
+# Build GO
+make build
+</code></pre>
+
+<h2 id="extract:d47eb01f2f5fb68fde724a1ba6cd27d5">Extract</h2>
+
+<p>The Extract tool takes DICOM images and a LIDC XML file and builds output images.</p>
+
+<pre><code># Build Java app for local use
+./gradlew installDist
+# Build Java app for distribution
+./gradlew distZip distTar
+</code></pre>
+
+<p>The built application can be run as:</p>
+
+<pre><code>build/install/LIDCTooling/bin/Extract
+</code></pre>
+
+<p></p>
+
+      </div>
+    </div>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/what-input.min.js"></script>
+    <script src="/js/foundation.min.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

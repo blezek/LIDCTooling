@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Building on LIDCTooling</title>
+    <link>/building/</link>
+    <description>Recent content in Building on LIDCTooling</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="/building/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title></title>
+      <link>/building/building/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/building/building/</guid>
+      <description>
+
+&lt;h1 id=&#34;building-the-tools:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;Building the tools&lt;/h1&gt;
+
+&lt;h1 id=&#34;chest-imaging-platform:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;Chest Imaging Platform&lt;/h1&gt;
+
+&lt;p&gt;Building the &lt;a href=&#34;https://github.com/acil-bwh/ChestImagingPlatform&#34;&gt;Chest Imaging Platform&lt;/a&gt; is relatively easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;git clone https://github.com/acil-bwh/ChestImagingPlatform.git
+cd ChestImagingPlatform
+mkdir build
+cd build
+cmake ..
+make # wait for it...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;lidctooling:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;LIDCTooling&lt;/h1&gt;
+
+&lt;h2 id=&#34;lidcfetch:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;LIDCFetch&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;LIDCFetch&lt;/code&gt; interacts with the LIDC website to fetch DICOM images.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git clone git@github.com:dblezek/LIDCTooling.git
+cd LIDCTooling
+# Build GO
+make build
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;extract:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;Extract&lt;/h2&gt;
+
+&lt;p&gt;The Extract tool takes DICOM images and a LIDC XML file and builds output images.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Build Java app for local use
+./gradlew installDist
+# Build Java app for distribution
+./gradlew distZip distTar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The built application can be run as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;build/install/LIDCTooling/bin/Extract
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

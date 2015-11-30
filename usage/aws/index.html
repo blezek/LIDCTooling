@@ -1,0 +1,198 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing on AWS</title>
+    <link rel="stylesheet" href="/css/foundation.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+  </head>
+  <body>
+
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <ul class="dropdown menu" data-dropdown-menu>
+          <li class="menu-text"><a href="/">LIDCTooling</a></li>
+          <li class="has-submenu">
+            
+          <li><a href="/building/">Building</a></li>
+          
+          <li><a href="/usage/">Usage</a></li>
+          
+        </ul>
+      </div>
+    </div>
+    
+
+    <div class="row">
+      <div class="large-12 columns">
+        
+
+<h1 id="processing-on-aws:028da4a231a5317af863941c3c91d223">Processing on AWS</h1>
+
+<p>Processing the required data (1300+ studies) can be efficiently done using cluster computing.  A <a href="http://star.mit.edu/cluster/docs/latest/index.html">StarCluster</a> is an on-demand AWS cluster of any size.</p>
+
+<h2 id="pricing-analysis:028da4a231a5317af863941c3c91d223">Pricing analysis</h2>
+
+<p>The LIDC data is approximately 150G.  EBS storage is $0.05 per GB-month.  To store the LIDC data would cost $7.50 / month on Magnetic volumes, $15.00 / month using SSD.  Processing will likely take 3x, so we&rsquo;ll allocate 500G at a cost of $25.00 / month.</p>
+
+<p>Spot instances are a great value, a <code>c4.large</code> has 2 vCPU and 3.75G memory and typically runs ~ $0.01 / hr.  Requesting spot instances is easy, set <code>spot_bid = 0.02</code> (or the maximum bid).</p>
+
+<h3 id="free-tier:028da4a231a5317af863941c3c91d223">Free tier</h3>
+
+<ul>
+<li>Gives 750 hrs of <code>t2.micro</code> or <code>t1.micro</code></li>
+<li>Gives 30 GB EBS storage / month (SSD or magnetic)</li>
+</ul>
+
+<h2 id="install-starcluster:028da4a231a5317af863941c3c91d223">Install StarCluster</h2>
+
+<p><a href="http://star.mit.edu/cluster/docs/latest/index.html">StarCluster</a> is a project to make mananging a OpenGridEngine cluster on AWS easy.</p>
+
+<pre><code class="language-bash"># Install Python's virtualenv support
+pip install --user virtualenv
+
+# Create the virtualenv in the local directory
+virtualenv venv
+
+# Activate the local virtualenv
+source venv/bin/activate
+
+# Install StarCluster in the virtualenv
+easy_install StarCluster
+</code></pre>
+
+<p>Cool! Now StarCluster is installed and we can do interesting things with it.</p>
+
+<h2 id="configure:028da4a231a5317af863941c3c91d223">Configure</h2>
+
+<p>Setup the configuration:</p>
+
+<pre><code class="language-bash">starcluster help
+</code></pre>
+
+<p>Select <code>2</code> to write the config file.  The edit according to the <a href="http://star.mit.edu/cluster/docs/latest/quickstart.html">Quick Start guide</a>.  Using a 2 node cluster of <code>t2.micro</code> instances to work with the AMI instance and conform to the AWS free tier.</p>
+
+<p>Using a non-root account called <code>cluster</code>.  Created a group called <code>starcluster</code> and gave it EC2 and IAM access.</p>
+
+<h3 id="specific-configuration-changes:028da4a231a5317af863941c3c91d223">Specific configuration changes</h3>
+
+<pre><code>[aws info]
+AWS_ACCESS_KEY_ID = ************* #your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY =  ***************** #your_secret_access_key
+# replace this with your account number
+AWS_USER_ID= ********* #your userid
+
+[cluster smallcluster]
+CLUSTER_SIZE = 2
+NODE_IMAGE = ami-3393a45a
+# Instance type, change later
+NODE_INSTANCE_TYPE = t1.micro
+
+# Use the volume
+VOLUMES = data
+
+# Create an EBS volumes
+[volume data]
+VOLUME_ID = vol-*****
+MOUNT_PATH = /home
+
+[volume software]
+VOLUME_ID = vol-*****
+MOUNT_PATH = /software
+</code></pre>
+
+<h3 id="create-a-volume:028da4a231a5317af863941c3c91d223">Create a volume</h3>
+
+<p><a href="http://star.mit.edu/cluster/docs/latest/manual/volumes.html">Creating and formatting</a> an EBS volume is relatively easy:</p>
+
+<pre><code class="language-bash">starcluster createvolume --name=lidc-data --shutdown-volume-host --bid 0.10 10 us-east-1a
+starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1a
+</code></pre>
+
+<p>Creates a <code>10 GB</code> volume named <code>lidc-data</code> in the <code>us-east-1a</code> zone, shutting down the creation host afterward.  Also bids on a spot instance for $0.10.  The bid is not necessary for a <code>t1.micro</code> instance, because it cost $0.05 / hr.</p>
+
+<h3 id="create-a-keypair:028da4a231a5317af863941c3c91d223">Create a keypair:</h3>
+
+<pre><code>starcluster createkey mykey -o ~/.ssh/mykey.rsa
+</code></pre>
+
+<p>And started the cluster:</p>
+
+<pre><code>starcluster start test
+
+# Start a bigger cluster, 8 nodes 4 CPU / 7.5G 
+# starcluster start -c lidc lidc
+
+</code></pre>
+
+<p>Log in:</p>
+
+<pre><code># As root
+starcluster sshmaster test
+
+# As sgeadmin
+starcluster sshmaster -u sgeadmin test
+</code></pre>
+
+<h2 id="do-a-little-test:028da4a231a5317af863941c3c91d223">Do a little test</h2>
+
+<pre><code>starcluster sshmaster -u sgeadmin test
+cat &gt; sleep.pbs &lt;&lt;EOF
+#!/bin/sh
+ 
+for i in {1..60} ; do
+       echo $i
+       sleep 5
+done
+EOF
+
+chmod 755 sleep.pbs
+
+# submit
+for i in {1..5} ; do
+  qsub -o sleep.\$JOB_ID.log -j yes sleep.pbs
+done
+
+# watch
+watch qstat -f
+
+</code></pre>
+
+<h2 id="shutdown-the-cluster:028da4a231a5317af863941c3c91d223">Shutdown the cluster</h2>
+
+<p>If the cluster is EBS backed, it can be safely shutdown and restarted with all disks stored on EBS.</p>
+
+<pre><code>starcluster stop test
+</code></pre>
+
+<p>To fully delete the cluster, terminate it:</p>
+
+<pre><code># Poof!
+starcluster terminate test
+</code></pre>
+
+<h2 id="vagrant-building-tooling-for-linux:028da4a231a5317af863941c3c91d223">Vagrant / Building Tooling for Linux</h2>
+
+<p>Create a Vagrant box to build LIDCTooling.</p>
+
+<pre><code>vagrant init ubuntu/precise64; vagrant up --provider virtualbox
+</code></pre>
+
+<p>Build instructions are found in <code>buildVagrant.sh</code>, and result in software installed in <code>ClusterSoftware</code>.</p>
+
+<h2 id="copy-software-to-starcluster:028da4a231a5317af863941c3c91d223">Copy software to StarCluster</h2>
+
+<pre><code>starcluster put test --user sgeadmin ClusterSoftware /software/ClusterSoftware
+</code></pre>
+
+      </div>
+    </div>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/what-input.min.js"></script>
+    <script src="/js/foundation.min.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

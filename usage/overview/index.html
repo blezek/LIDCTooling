@@ -1,0 +1,72 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Overview</title>
+    <link rel="stylesheet" href="/css/foundation.min.css">
+    <link rel="stylesheet" href="/css/app.css">
+  </head>
+  <body>
+
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <ul class="dropdown menu" data-dropdown-menu>
+          <li class="menu-text"><a href="/">LIDCTooling</a></li>
+          <li class="has-submenu">
+            
+          <li><a href="/building/">Building</a></li>
+          
+          <li><a href="/usage/">Usage</a></li>
+          
+        </ul>
+      </div>
+    </div>
+    
+
+    <div class="row">
+      <div class="large-12 columns">
+        
+
+<h1 id="lidc-data-conversion:68f80267fa3a50980dbb745a782b8dca">LIDC Data conversion</h1>
+
+<p>Making LIDC annotations available as DICOM Segmentation Objects.</p>
+
+<h2 id="abstract:68f80267fa3a50980dbb745a782b8dca">Abstract</h2>
+
+<p>The Lung Imaging Database Consortium has collected 1000&rsquo;s of CT scans with hand annotated tumor outlines for nodules &gt; 3 mm.  Nodules smaller than 3 mm are indicated by a single &ldquo;center of mass&rdquo; annotation.  This data is stored in XML format and includes 4 readers.  Unfortunately, the format does not lend itself to easy comparison nor analysis.  This project aims to convert LIDC data to a more useful format.</p>
+
+<h2 id="goal:68f80267fa3a50980dbb745a782b8dca">Goal</h2>
+
+<ul>
+<li>convert LIDC XML data to DICOM segmentation objects</li>
+<li>export NIfTI volumes of segmentation masks</li>
+</ul>
+
+<h2 id="approach:68f80267fa3a50980dbb745a782b8dca">Approach</h2>
+
+<h3 id="automation:68f80267fa3a50980dbb745a782b8dca">Automation</h3>
+
+<p>This process shall be automated to the extent possible, creating an easy to use, repeatable process for researchers desiring to obtain the LIDC data in a usable format.</p>
+
+<p>Automation includes:</p>
+
+<ul>
+<li>download of CT datasets given a LIDC XML</li>
+<li>interaction with the <a href="https://wiki.cancerimagingarchive.net/display/Public/TCIA+Programmatic+Interface+%28REST+API%29+Usage+Guide">LIDC REST services</a> (<a href="TCIA REST API.pdf">PDF</a>)</li>
+</ul>
+
+<h3 id="language-platform:68f80267fa3a50980dbb745a782b8dca">Language / Platform</h3>
+
+<p>While <a href="http://www.slicer.org">Slicer</a> is a natural choice, the process is not likely to be repeated nor does it require integration with Slicer.  LIDC data consists of XML and DICOM, and Java has easy to use libraries for both formats.  Java is natively available on every platform and integrates well with REST services.</p>
+
+      </div>
+    </div>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/what-input.min.js"></script>
+    <script src="/js/foundation.min.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

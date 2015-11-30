@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>LIDCTooling</title>
+    <link>/</link>
+    <description>Recent content on LIDCTooling</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Processing Overview</title>
+      <link>/usage/overview/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/usage/overview/</guid>
+      <description>
+
+&lt;h1 id=&#34;lidc-data-conversion:68f80267fa3a50980dbb745a782b8dca&#34;&gt;LIDC Data conversion&lt;/h1&gt;
+
+&lt;p&gt;Making LIDC annotations available as DICOM Segmentation Objects.&lt;/p&gt;
+
+&lt;h2 id=&#34;abstract:68f80267fa3a50980dbb745a782b8dca&#34;&gt;Abstract&lt;/h2&gt;
+
+&lt;p&gt;The Lung Imaging Database Consortium has collected 1000&amp;rsquo;s of CT scans with hand annotated tumor outlines for nodules &amp;gt; 3 mm.  Nodules smaller than 3 mm are indicated by a single &amp;ldquo;center of mass&amp;rdquo; annotation.  This data is stored in XML format and includes 4 readers.  Unfortunately, the format does not lend itself to easy comparison nor analysis.  This project aims to convert LIDC data to a more useful format.&lt;/p&gt;
+
+&lt;h2 id=&#34;goal:68f80267fa3a50980dbb745a782b8dca&#34;&gt;Goal&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;convert LIDC XML data to DICOM segmentation objects&lt;/li&gt;
+&lt;li&gt;export NIfTI volumes of segmentation masks&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;approach:68f80267fa3a50980dbb745a782b8dca&#34;&gt;Approach&lt;/h2&gt;
+
+&lt;h3 id=&#34;automation:68f80267fa3a50980dbb745a782b8dca&#34;&gt;Automation&lt;/h3&gt;
+
+&lt;p&gt;This process shall be automated to the extent possible, creating an easy to use, repeatable process for researchers desiring to obtain the LIDC data in a usable format.&lt;/p&gt;
+
+&lt;p&gt;Automation includes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;download of CT datasets given a LIDC XML&lt;/li&gt;
+&lt;li&gt;interaction with the &lt;a href=&#34;https://wiki.cancerimagingarchive.net/display/Public/TCIA+Programmatic+Interface+%28REST+API%29+Usage+Guide&#34;&gt;LIDC REST services&lt;/a&gt; (&lt;a href=&#34;TCIA REST API.pdf&#34;&gt;PDF&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;language-platform:68f80267fa3a50980dbb745a782b8dca&#34;&gt;Language / Platform&lt;/h3&gt;
+
+&lt;p&gt;While &lt;a href=&#34;http://www.slicer.org&#34;&gt;Slicer&lt;/a&gt; is a natural choice, the process is not likely to be repeated nor does it require integration with Slicer.  LIDC data consists of XML and DICOM, and Java has easy to use libraries for both formats.  Java is natively available on every platform and integrates well with REST services.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Processing</title>
+      <link>/usage/processing/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/usage/processing/</guid>
+      <description>
+
+&lt;h1 id=&#34;processing:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Processing&lt;/h1&gt;
+
+&lt;h2 id=&#34;example:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Example&lt;/h2&gt;
+
+&lt;h3 id=&#34;get-the-lidc-xml-files:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Get the LIDC XML Files&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;wget &#39;https://wiki.cancerimagingarchive.net/download/attachments/3539039/LIDC-XML-only.tar.gz&#39;
+mkdir -p LIDC-XML-only
+cd LIDC-XML-only
+tar fxvz ../LIDC-XML-only.tar.gz
+cd ..
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;set-some-useful-variables:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Set some useful variables&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;XML=LIDC-XML-only/tcia-lidc-xml/157/158.xml
+APIKEY=25f0025c-071c-426d-b15a-199421e2e889
+APIKEY=864dcc73-ce40-4f19-8a3e-fce71fc2dba2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;extract-a-seriesinstanceuid-from-an-xml-file:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Extract a SeriesInstanceUID from an XML file&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;SeriesInstanceUID=$(build/install/LIDCTooling/bin/Extract SeriesInstanceUID $XML)
+
+# 1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824
+echo $SeriesInstanceUID
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;download-the-image-data:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Download the image data&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;mkdir -p dicom/$SeriesInstanceUID
+wget -O /tmp/$SeriesInstanceUID.zip --quiet --header &amp;quot;api_key: $APIKEY&amp;quot; &amp;quot;https://services.cancerimagingarchive.net/services/v3/TCIA/query/getImage?SeriesInstanceUID=$SeriesInstanceUID&amp;quot;
+
+unzip -qq -o /tmp/$SeriesInstanceUID.zip -d dicom/$SeriesInstanceUID
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;extract-the-rois-and-generate-json:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Extract the ROIs and generate JSON&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;mkdir -p segmented/$SeriesInstanceUID
+build/install/LIDCTooling/bin/Extract segment $XML dicom/$SeriesInstanceUID segmented/$SeriesInstanceUID
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;reads-json:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;&lt;code&gt;reads.json&lt;/code&gt;&lt;/h3&gt;
+
+&lt;p&gt;The final result of the processing is a file named &lt;a href=&#34;usage/reads.json&#34;&gt;segmented/$SeriesInstanceUID/reads.json&lt;/a&gt;.  It contains information about the original DICOM images, each read, nodules and small nodules found by each radiologist and pointers to a label map for each.&lt;/p&gt;
+
+&lt;h2 id=&#34;procesing-in-bulk:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Procesing in bulk&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;LIDCFetch&lt;/code&gt; application can automatically process an entire &lt;code&gt;XML&lt;/code&gt; file containing reads.&lt;/p&gt;
+
+&lt;p&gt;Example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;make build
+bin/LIDCFetch gather bin/LIDCFetch gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Example of processing all the data:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;make build
+find bin/LIDCFetch gather bin/LIDCFetch gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;tools:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Tools&lt;/h2&gt;
+
+&lt;h3 id=&#34;download-dicom-datasets:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Download DICOM datasets&lt;/h3&gt;
+
+&lt;p&gt;Downloading DICOM from LIDC is relatively easy.  With an API key issued by the LIDC support team, issue &lt;code&gt;curl&lt;/code&gt; commands with an extra header of &lt;code&gt;api_key&lt;/code&gt;, e.g.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;curl --header &amp;quot;api_key: 25f0025c-071c-426d-b15a-199421e2e889&amp;quot; https://services.cancerimagingarchive.net/services/v3/TCIA/query/getCollectionValues
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;download-api:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;Download API&lt;/h3&gt;
+
+&lt;p&gt;Usage:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;LIDCFetch &amp;lt;command&amp;gt; [options]
+
+Commands:
+
+  collections -- get collections
+  
+  patients    -- get list of patient
+    --collection &amp;lt;Collection&amp;gt;  -- collection query value
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;xml-to-nifti:9633d27b7a2b1f04c4bfd4a47cc90697&#34;&gt;XML To NIfTI&lt;/h3&gt;
+
+&lt;p&gt;Load an XML file and convert to NIfTI.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Processing on AWS</title>
+      <link>/usage/aws/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/usage/aws/</guid>
+      <description>
+
+&lt;h1 id=&#34;processing-on-aws:028da4a231a5317af863941c3c91d223&#34;&gt;Processing on AWS&lt;/h1&gt;
+
+&lt;p&gt;Processing the required data (1300+ studies) can be efficiently done using cluster computing.  A &lt;a href=&#34;http://star.mit.edu/cluster/docs/latest/index.html&#34;&gt;StarCluster&lt;/a&gt; is an on-demand AWS cluster of any size.&lt;/p&gt;
+
+&lt;h2 id=&#34;pricing-analysis:028da4a231a5317af863941c3c91d223&#34;&gt;Pricing analysis&lt;/h2&gt;
+
+&lt;p&gt;The LIDC data is approximately 150G.  EBS storage is $0.05 per GB-month.  To store the LIDC data would cost $7.50 / month on Magnetic volumes, $15.00 / month using SSD.  Processing will likely take 3x, so we&amp;rsquo;ll allocate 500G at a cost of $25.00 / month.&lt;/p&gt;
+
+&lt;p&gt;Spot instances are a great value, a &lt;code&gt;c4.large&lt;/code&gt; has 2 vCPU and 3.75G memory and typically runs ~ $0.01 / hr.  Requesting spot instances is easy, set &lt;code&gt;spot_bid = 0.02&lt;/code&gt; (or the maximum bid).&lt;/p&gt;
+
+&lt;h3 id=&#34;free-tier:028da4a231a5317af863941c3c91d223&#34;&gt;Free tier&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Gives 750 hrs of &lt;code&gt;t2.micro&lt;/code&gt; or &lt;code&gt;t1.micro&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Gives 30 GB EBS storage / month (SSD or magnetic)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;install-starcluster:028da4a231a5317af863941c3c91d223&#34;&gt;Install StarCluster&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://star.mit.edu/cluster/docs/latest/index.html&#34;&gt;StarCluster&lt;/a&gt; is a project to make mananging a OpenGridEngine cluster on AWS easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;# Install Python&#39;s virtualenv support
+pip install --user virtualenv
+
+# Create the virtualenv in the local directory
+virtualenv venv
+
+# Activate the local virtualenv
+source venv/bin/activate
+
+# Install StarCluster in the virtualenv
+easy_install StarCluster
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Cool! Now StarCluster is installed and we can do interesting things with it.&lt;/p&gt;
+
+&lt;h2 id=&#34;configure:028da4a231a5317af863941c3c91d223&#34;&gt;Configure&lt;/h2&gt;
+
+&lt;p&gt;Setup the configuration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;starcluster help
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Select &lt;code&gt;2&lt;/code&gt; to write the config file.  The edit according to the &lt;a href=&#34;http://star.mit.edu/cluster/docs/latest/quickstart.html&#34;&gt;Quick Start guide&lt;/a&gt;.  Using a 2 node cluster of &lt;code&gt;t2.micro&lt;/code&gt; instances to work with the AMI instance and conform to the AWS free tier.&lt;/p&gt;
+
+&lt;p&gt;Using a non-root account called &lt;code&gt;cluster&lt;/code&gt;.  Created a group called &lt;code&gt;starcluster&lt;/code&gt; and gave it EC2 and IAM access.&lt;/p&gt;
+
+&lt;h3 id=&#34;specific-configuration-changes:028da4a231a5317af863941c3c91d223&#34;&gt;Specific configuration changes&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;[aws info]
+AWS_ACCESS_KEY_ID = ************* #your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY =  ***************** #your_secret_access_key
+# replace this with your account number
+AWS_USER_ID= ********* #your userid
+
+[cluster smallcluster]
+CLUSTER_SIZE = 2
+NODE_IMAGE = ami-3393a45a
+# Instance type, change later
+NODE_INSTANCE_TYPE = t1.micro
+
+# Use the volume
+VOLUMES = data
+
+# Create an EBS volumes
+[volume data]
+VOLUME_ID = vol-*****
+MOUNT_PATH = /home
+
+[volume software]
+VOLUME_ID = vol-*****
+MOUNT_PATH = /software
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;create-a-volume:028da4a231a5317af863941c3c91d223&#34;&gt;Create a volume&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://star.mit.edu/cluster/docs/latest/manual/volumes.html&#34;&gt;Creating and formatting&lt;/a&gt; an EBS volume is relatively easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;starcluster createvolume --name=lidc-data --shutdown-volume-host --bid 0.10 10 us-east-1a
+starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1a
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Creates a &lt;code&gt;10 GB&lt;/code&gt; volume named &lt;code&gt;lidc-data&lt;/code&gt; in the &lt;code&gt;us-east-1a&lt;/code&gt; zone, shutting down the creation host afterward.  Also bids on a spot instance for $0.10.  The bid is not necessary for a &lt;code&gt;t1.micro&lt;/code&gt; instance, because it cost $0.05 / hr.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-a-keypair:028da4a231a5317af863941c3c91d223&#34;&gt;Create a keypair:&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code&gt;starcluster createkey mykey -o ~/.ssh/mykey.rsa
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And started the cluster:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;starcluster start test
+
+# Start a bigger cluster, 8 nodes 4 CPU / 7.5G 
+# starcluster start -c lidc lidc
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Log in:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# As root
+starcluster sshmaster test
+
+# As sgeadmin
+starcluster sshmaster -u sgeadmin test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;do-a-little-test:028da4a231a5317af863941c3c91d223&#34;&gt;Do a little test&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code&gt;starcluster sshmaster -u sgeadmin test
+cat &amp;gt; sleep.pbs &amp;lt;&amp;lt;EOF
+#!/bin/sh
+ 
+for i in {1..60} ; do
+       echo $i
+       sleep 5
+done
+EOF
+
+chmod 755 sleep.pbs
+
+# submit
+for i in {1..5} ; do
+  qsub -o sleep.\$JOB_ID.log -j yes sleep.pbs
+done
+
+# watch
+watch qstat -f
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;shutdown-the-cluster:028da4a231a5317af863941c3c91d223&#34;&gt;Shutdown the cluster&lt;/h2&gt;
+
+&lt;p&gt;If the cluster is EBS backed, it can be safely shutdown and restarted with all disks stored on EBS.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;starcluster stop test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To fully delete the cluster, terminate it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Poof!
+starcluster terminate test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;vagrant-building-tooling-for-linux:028da4a231a5317af863941c3c91d223&#34;&gt;Vagrant / Building Tooling for Linux&lt;/h2&gt;
+
+&lt;p&gt;Create a Vagrant box to build LIDCTooling.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;vagrant init ubuntu/precise64; vagrant up --provider virtualbox
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Build instructions are found in &lt;code&gt;buildVagrant.sh&lt;/code&gt;, and result in software installed in &lt;code&gt;ClusterSoftware&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;copy-software-to-starcluster:028da4a231a5317af863941c3c91d223&#34;&gt;Copy software to StarCluster&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code&gt;starcluster put test --user sgeadmin ClusterSoftware /software/ClusterSoftware
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/building/building/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/building/building/</guid>
+      <description>
+
+&lt;h1 id=&#34;building-the-tools:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;Building the tools&lt;/h1&gt;
+
+&lt;h1 id=&#34;chest-imaging-platform:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;Chest Imaging Platform&lt;/h1&gt;
+
+&lt;p&gt;Building the &lt;a href=&#34;https://github.com/acil-bwh/ChestImagingPlatform&#34;&gt;Chest Imaging Platform&lt;/a&gt; is relatively easy:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;git clone https://github.com/acil-bwh/ChestImagingPlatform.git
+cd ChestImagingPlatform
+mkdir build
+cd build
+cmake ..
+make # wait for it...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;lidctooling:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;LIDCTooling&lt;/h1&gt;
+
+&lt;h2 id=&#34;lidcfetch:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;LIDCFetch&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;LIDCFetch&lt;/code&gt; interacts with the LIDC website to fetch DICOM images.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git clone git@github.com:dblezek/LIDCTooling.git
+cd LIDCTooling
+# Build GO
+make build
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;extract:d47eb01f2f5fb68fde724a1ba6cd27d5&#34;&gt;Extract&lt;/h2&gt;
+
+&lt;p&gt;The Extract tool takes DICOM images and a LIDC XML file and builds output images.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Build Java app for local use
+./gradlew installDist
+# Build Java app for distribution
+./gradlew distZip distTar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The built application can be run as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;build/install/LIDCTooling/bin/Extract
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

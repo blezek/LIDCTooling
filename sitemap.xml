@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/usage/overview/</loc>
+  </url>
+  
+  <url>
+    <loc>/usage/processing/</loc>
+  </url>
+  
+  <url>
+    <loc>/usage/aws/</loc>
+  </url>
+  
+  <url>
+    <loc>/building/building/</loc>
+  </url>
+  
+</urlset>
