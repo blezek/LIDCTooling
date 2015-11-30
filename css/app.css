@@ -3681,5 +3681,30 @@ table.hover tr:nth-of-type(even):hover {
   -webkit-animation-delay: 700ms !important;
           animation-delay: 700ms !important; }
 
-.scroll {
-  overflow-y: scroll; }
+.hero {
+  height: 400px;
+  background-color: #0078A0;
+  background-size: cover;
+  width: 100%; }
+
+.intro-text {
+  font-size: 50px;
+  color: #fff;
+  text-align: center;
+  margin-top: 15%; }
+
+pre {
+  margin: 0 0 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(10, 10, 10, 0.25);
+  border-radius: 0;
+  position: relative;
+  background-color: white;
+  background-color: #E6E6E6; }
+  pre > :first-child {
+    margin-top: 0; }
+  pre > :last-child {
+    margin-bottom: 0; }
+
+code {
+  border: none; }
