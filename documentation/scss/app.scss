@@ -42,7 +42,25 @@
 @include motion-ui-transitions;
 @include motion-ui-animations;
 
-
-.scroll {
-  overflow-y: scroll;
+.hero {
+      height: 400px;
+      background-color: #0078A0;
+      background-size: cover;
+      width: 100%;
 }
+
+.intro-text {
+            font-size: 50px;
+            color: #fff;
+            text-align: center;
+            margin-top: 15%;
+            
+}
+
+pre {
+    @include callout();
+     background-color: #E6E6E6;
+}
+code {
+  border: none;
+}    

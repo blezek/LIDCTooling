@@ -1,5 +1,6 @@
 var gulp = require('gulp');
 var $    = require('gulp-load-plugins')();
+var watch = require('gulp-watch');
 
 var sassPaths = [
   'bower_components/foundation-sites/scss',
@@ -32,3 +33,7 @@ gulp.task('sass', function() {
 
 gulp.task('default', ['sass', 'js'], function() {
 });
+
+gulp.task('watch', function() {
+  gulp.watch(['scss/*'], ['sass']);
+})

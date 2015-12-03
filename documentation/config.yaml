@@ -1,7 +1,10 @@
-baseurl: "/"
+baseurl: ""
 languageCode: "en-us"
 title: "LIDCTooling"
 pluralizelisttitles: "false"
+
+# Make all URLs relative, very handy
+relativeURLS: "true"
 
 # Menus
 menu:
