@@ -70,7 +70,10 @@ Example of processing all the data:
 
 ```bash
 make build
-find bin/LIDCFetch gather bin/LIDCFetch gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
+find LIDC-XML-only/tcia-lidc-xml -name "*.xml" | sort | xargs bin/LIDCFetch --verbose gather --db Evaluation.db
+# First 20
+find LIDC-XML-only/tcia-lidc-xml -name "*.xml" | sort > all_xml_files.txt
+head -20 all_xml_files.txt |  xargs bin/LIDCFetch --verbose gather --db Evaluation.db
 ```
 
 

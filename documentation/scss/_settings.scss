@@ -40,6 +40,9 @@
 
 @import 'util/util';
 
+// DJB Fonts
+// https://www.google.com/fonts#UsePlace:use/Collection:Montserrat
+@import url(https://fonts.googleapis.com/css?family=Montserrat:400,700|Merriweather:400,700|Source+Code+Pro);
 // 1. Global
 // ---------
 
@@ -58,7 +61,7 @@ $black: #0a0a0a;
 $white: #fefefe;
 $body-background: $white;
 $body-font-color: $black;
-$body-font-family: 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
+$body-font-family: 'Montserret', 'Helvetica Neue', Helvetica, Roboto, Arial, sans-serif;
 $body-antialiased: true;
 $global-margin: 1rem;
 $global-padding: 1rem;
@@ -92,10 +95,10 @@ $block-grid-max: 6;
 // 4. Base Typography
 // ------------------
 
-$header-font-family: $body-font-family;
+$header-font-family: 'Merriweather', $body-font-family;
 $header-font-weight: $global-weight-normal;
 $header-font-style: normal;
-$font-family-monospace: Consolas, 'Liberation Mono', Courier, monospace;
+$font-family-monospace: 'Source Code Pro', Consolas, 'Liberation Mono', Courier, monospace;
 $header-sizes: (
   small: (
     'h1': 24,
@@ -128,7 +131,8 @@ $code-font-family: $font-family-monospace;
 $code-font-weight: $global-weight-normal;
 $code-background: $light-gray;
 $code-border: 1px solid $medium-gray;
-$code-padding: rem-calc(2 5 1);
+// DJB, changeds from rem-calc(2 5 1)
+$code-padding: rem-calc(2 0 1);
 $anchor-color: $primary-color;
 $anchor-color-hover: scale-color($anchor-color, $lightness: -14%);
 $anchor-text-decoration: none;

@@ -7,5 +7,5 @@ cluster_meta="$(starcluster listclusters $1 2>&1)"
 MASTER=$(echo "${cluster_meta}" | grep "master running" | awk '{print $4}')
 
 ssh-add  ~/.ssh/mykey.rsa
-rsync -ar ClusterSoftware/ root@$MASTER:/software/
-rsync -ar lidc.sh sgeadmin@$MASTER:
+rsync -arv --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
+rsync -arv devops/lidc.sh sgeadmin@$MASTER:

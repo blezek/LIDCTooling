@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha1"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -54,6 +55,10 @@ var GatherCommand = cli.Command{
 			Value: "segmented",
 			Usage: "location for segmented files",
 		},
+		cli.BoolFlag{
+			Name:  "clean",
+			Usage: "Clean up all image files",
+		},
 	},
 	Action: gather,
 }
@@ -97,7 +102,12 @@ func gather(context *cli.Context) {
 	var args []string
 	// Arguments are a list of XML files
 	for _, xml := range context.Args() {
-		SeriesInstanceUID, _ := Run(context.String("extract"), "SeriesInstanceUID", xml)
+		args = []string{context.String("extract"), "SeriesInstanceUID", xml}
+		SeriesInstanceUID, err := Run(args...)
+		if err != nil || SeriesInstanceUID == "" {
+			logger.Fatalf("Could not determine SeriesInstanceUID.  Command is %v", args)
+		}
+
 		logger.Info("Processing %v - %v", xml, SeriesInstanceUID)
 
 		// Download needed?
@@ -117,7 +127,8 @@ func gather(context *cli.Context) {
 
 		// Check the segmented directory
 		SegmentedDir := filepath.Join(context.String("segmented"), SeriesInstanceUID)
-		if !Exists(SegmentedDir) {
+		BaseImage := filepath.Join(SegmentedDir, "image.nii.gz")
+		if !Exists(SegmentedDir) || !Exists(BaseImage) {
 			os.MkdirAll(SegmentedDir, os.ModePerm|os.ModeDir)
 			args = []string{context.String("extract"), "segment", xml, DownloadDir, SegmentedDir}
 			out, err := Run(args...)
@@ -125,8 +136,13 @@ func gather(context *cli.Context) {
 				logger.Error("error running %v: %v", args, out)
 			}
 		} else {
-			logger.Info("Segmented existis in %v", SegmentedDir)
+			logger.Info("Segmented exists in %v", SegmentedDir)
 		}
+		// Copy XML over
+		data, _ := ioutil.ReadFile(xml)
+		// Write data to dst
+		_, fn := filepath.Split(xml)
+		ioutil.WriteFile(filepath.Join(SegmentedDir, fn), data, 0644)
 
 		// Now parse the JSON
 		JsonFile := filepath.Join(SegmentedDir, "reads.json")
@@ -200,7 +216,20 @@ func gather(context *cli.Context) {
 					db.Exec("update measures set nodule_uid = ? where uid = ?", nodule_uid, measures_uid)
 					db.Exec("update measures set read_uid = ? where uid = ?", read_uid, measures_uid)
 				}
+			}
+		}
 
+		// If we are to clean up, delete the DICOM directory
+		if context.Bool("clean") {
+			logger.Debug("Cleaning up %v", DownloadDir)
+			os.RemoveAll(DownloadDir)
+			logger.Debug("Removing all images from %v", SegmentedDir)
+			fileList, err := filepath.Glob(filepath.Join(SegmentedDir, "*.nii.gz"))
+			if err != nil {
+				logger.Fatalf("Error globbing %v", err.Error())
+			}
+			for _, file := range fileList {
+				os.Remove(file)
 			}
 		}
 	}

@@ -60,6 +60,7 @@ LIDCFetch --verbose \
     --evaluate $EVALUATE \
     --dicom $DICOM \
     --segmented $SEGMENTED \
+    --clean \
     /software/$XML
 
 

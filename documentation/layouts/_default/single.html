@@ -1,13 +1,36 @@
 {{ partial "header.html" . }}
-    <div class="row">
-      <div class="large-12 columns">
-        {{.Content}}
-      </div>
-    </div>
+<div class="row">
+  <div class="large-9 columns">
+    {{.Content}}
+  </div>
 
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/what-input.min.js"></script>
-    <script src="/js/foundation.min.js"></script>
-    <script src="/js/app.js"></script>
-  </body>
-</html>
+
+  {{ $section := index .Site.Sections .Section }}
+  {{ $current := . }}
+
+  
+  <div class="large-3 columns right callout">
+    <div class="panel">
+
+      <ul class="menu vertical nest">
+        
+        {{ range $section.Pages }}
+        
+        <li><a href="{{.Permalink}}">
+            {{ if eq $current .}}
+            <span class="active">{{.Title}}</span>
+            {{else}}
+            {{.Title}}
+            {{end}}
+          </a>
+          {{substr .TableOfContents 26 -6 | safeHTML}}
+        </li>
+        {{end}}
+        
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+{{ partial "footer.html" .}}
