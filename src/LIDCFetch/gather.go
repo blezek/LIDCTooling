@@ -109,6 +109,14 @@ func gather(context *cli.Context) {
 		}
 
 		logger.Info("Processing %v - %v", xml, SeriesInstanceUID)
+		// Check the segmented directory
+		SegmentedDir := filepath.Join(context.String("segmented"), SeriesInstanceUID)
+		ReportFile := filepath.Join(SegmentedDir, "reads.json")
+		if Exists(ReportFile) {
+			logger.Info("reads file exists, continuing (%v)", ReportFile)
+			continue
+		}
+		BaseImage := filepath.Join(SegmentedDir, "image.nii.gz")
 
 		// Download needed?
 		DownloadDir := filepath.Join(context.String("dicom"), SeriesInstanceUID)
@@ -125,9 +133,6 @@ func gather(context *cli.Context) {
 			logger.Info("DICOM exists in %v", DownloadDir)
 		}
 
-		// Check the segmented directory
-		SegmentedDir := filepath.Join(context.String("segmented"), SeriesInstanceUID)
-		BaseImage := filepath.Join(SegmentedDir, "image.nii.gz")
 		if !Exists(SegmentedDir) || !Exists(BaseImage) {
 			os.MkdirAll(SegmentedDir, os.ModePerm|os.ModeDir)
 			args = []string{context.String("extract"), "segment", xml, DownloadDir, SegmentedDir}
