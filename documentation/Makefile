@@ -1,58 +1,56 @@
-.PHONY: default help
+.PHONY: help setup build npm default
+
+default: help
+
 define help
 
-Makefile for DEWEY documentation
-  setup   - install hugo, styles, gulp locally
-  build   - build the documentation website
-  clean   - remove the build
-  watch   - run the webserver on port 1313 and watch for changes
-  stop    - stop the Hugo server
-  restart - restart the Hugo server
-  open    - Open the documentation website
+Makefile for MDS POC documentat
+  setup   - install gitbook, assumes Node / npm are installed
+  build   - build the documentation, in documentation/static
+  watch   - watch for documentation changes, serves on http://localhost:4000
+  open    - Open the documentation website (http://localhost:4000)
 
 endef
 export help
 
+build: setup
+	node_modules/.bin/gitbook build
+
 help:
 	@echo "$$help"
 
-setup:
-	go get -u github.com/spf13/hugo
-	npm install
-	bower install
+open:
+	open http://localhost:4000
 
-build:
-	gulp
-	hugo
-
-watch: hugo.pid gulp.pid
+watch: gitbook.pid setup
 
 restart:
 	${MAKE} stop
 	${MAKE} watch
 
-hugo.pid:
-	{ hugo serve & echo $$! > $@; }
-
-gulp.pid:
-	{ gulp watch & echo $$! > $@; }
+gitbook.pid:
+	{ node_modules/.bin/gitbook serve & echo $$! > $@; }
 
 stop: 
-	test -e hugo.pid && kill `cat hugo.pid` && rm hugo.pid
-	test -e gulp.pid && kill `cat gulp.pid` && rm gulp.pid
-
-open:
-	open http://localhost:1313
+	test -e gitbook.pid && kill `cat gitbook.pid` && rm gitbook.pid
 
 publish: gh-pages build
-	rsync -ar public/ gh-pages
+	rsync -ar _book/ gh-pages
 	(cd gh-pages && git add . && git commit -m "publish" && git push)
 
 gh-pages:
 	git clone `git remote -v | grep origin | grep fetch | awk '{ print $$2 }'` gh-pages
 	(cd gh-pages && git checkout gh-pages)
 
-
 clean:
-	rm -rf public
+	rm -rf _book
+
+
+## Setup to build documentation
+setup: node_modules/gitbook-cli
+
+# installs gitbook
+node_modules/gitbook-cli:
+	@[ -x "`which npm 2>/dev/null`" ] || (printf "\n=====\nCould not find npm in your PATH, please install from http://nodejs.org\n=====\n\n"; exit 1;)
+	npm install gitbook-cli
 
