@@ -4,8 +4,9 @@ usage = """
 Usage:
  evaluateSegmentation.py [options] segmentation.nii gold_standard.nii evaluation.json
  options:
-    --label <value>      -- label in gold_standard to compare, default is 1
-    --threshold <value>  -- threshold in segmentation.nii, default is -0.5
+    --label <value>        -- label in gold_standard to compare, default is 1
+    --threshold <value>    -- threshold in segmentation.nii, default is -0.5
+    --cli <value>          -- command used to generate this segmentation
 """
 
 import getopt
@@ -14,7 +15,7 @@ import sys,os,json
 
 
 # Parse 
-opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label=","threshold="])
+opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label=","threshold=","cli="])
 
 if len(args) < 3:
     print usage
@@ -41,16 +42,21 @@ hd = sitk.HausdorffDistanceImageFilter()
 hd.Execute(segmentation,gold_standard)
 
 measures = {
-    "false_negative_error": ruler.GetFalseNegativeError(),
-    "false_positive_error": ruler.GetFalsePositiveError(),
-    "mean_overlap": ruler.GetMeanOverlap(),
-    "union_overlap": ruler.GetUnionOverlap(),
-    "volume_similarity": ruler.GetVolumeSimilarity(),
-    "jaccard_coefficient": ruler.GetJaccardCoefficient(),
-    "dice_coefficient": ruler.GetDiceCoefficient(),
-    "hausdorff_distance": hd.GetHausdorffDistance(),
-    "average_hausdorff_distance": hd.GetAverageHausdorffDistance(),
+    "command_line": settings["--cli"],
+    "measures" : {
+        "false_negative_error": ruler.GetFalseNegativeError(),
+        "false_positive_error": ruler.GetFalsePositiveError(),
+        "mean_overlap": ruler.GetMeanOverlap(),
+        "union_overlap": ruler.GetUnionOverlap(),
+        "volume_similarity": ruler.GetVolumeSimilarity(),
+        "jaccard_coefficient": ruler.GetJaccardCoefficient(),
+        "dice_coefficient": ruler.GetDiceCoefficient(),
+        "hausdorff_distance": hd.GetHausdorffDistance(),
+        "average_hausdorff_distance": hd.GetAverageHausdorffDistance(),
     }
+}
+
+
 
 fid = open(jsonOutput, 'w')
 fid.write(json.dumps(measures, indent=2))

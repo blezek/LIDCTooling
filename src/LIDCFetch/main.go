@@ -39,7 +39,7 @@ func main() {
 			Value: baseURL,
 		},
 	}
-	app.Commands = []cli.Command{QueryCommand, FetchCommand, GatherCommand}
+	app.Commands = []cli.Command{QueryCommand, FetchCommand, GatherCommand, EvaluateCommand}
 	app.Before = func(context *cli.Context) error {
 		configureLogging(context.Bool("verbose"))
 		if context.String("apikey") != "" {
