@@ -32,10 +32,8 @@ Use the [elastic load balancer](http://star.mit.edu/cluster/docs/latest/manual/l
 ```
 # -m 10     -- maximum number of nodes
 # -a 2      -- add 2 nodes at a time
-# -p -P dir -- save a series of plots to dir
-# -d -D dir -- save a CSV of stats to dir
-mkdir cluster_stats
-starcluster loadbalance -p -P cluster_stats -d -D cluster_stats lidc
+# -w 300    -- start adding nodes after jobs have waited 5 minutes (5*60 seconds)
+starcluster loadbalance -w 300 -m 10 -a 2 lidc
 ```
 
 

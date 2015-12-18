@@ -34,6 +34,10 @@ source venv/bin/activate
 
 # Install StarCluster in the virtualenv
 easy_install StarCluster
+
+# Install plotting software
+easy_install matplotlib
+easy_install numpy
 ```
 
 Cool! Now StarCluster is installed and we can do interesting things with it.
@@ -83,8 +87,8 @@ MOUNT_PATH = /software
 [Creating and formatting](http://star.mit.edu/cluster/docs/latest/manual/volumes.html) an EBS volume is relatively easy:
 
 ```bash
-starcluster createvolume --name=lidc-data --shutdown-volume-host --bid 0.10 10 us-east-1a
-starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1a
+starcluster createvolume --name=lidc-data --shutdown-volume-host --bid 0.05 100 us-east-1a
+starcluster createvolume --name=lidc-software --shutdown-volume-host --bid 0.05 8 us-east-1a
 ```
 
 Creates a `10 GB` volume named `lidc-data` in the `us-east-1a` zone, shutting down the creation host afterward.  Also bids on a spot instance for $0.10.  The bid is not necessary for a `t1.micro` instance, because it cost $0.05 / hr.

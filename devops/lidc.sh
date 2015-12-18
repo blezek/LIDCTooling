@@ -9,14 +9,16 @@
 #$ -cwd
 
 ## Array job, should be 1-1318
-#$ -t 1-20
+#$ -t 1-1318
 
 ## Export variables
 #$ -V
 
-## Logs
+## Logs -- to /dev/null
+# -o /home/sgeadmin/logs/
 #$ -j yes
-#$ -o /home/sgeadmin/logs/
+#$ -e /dev/null
+#$ -o /dev/null
 
 cd /home/sgeadmin/
 
