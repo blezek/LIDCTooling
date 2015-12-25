@@ -9,7 +9,7 @@ import (
 )
 
 // Valid until 10/2/2016
-var APIKey = "25f0025c-071c-426d-b15a-199421e2e889"
+var APIKey = "864dcc73-ce40-4f19-8a3e-fce71fc2dba2"
 var baseURL = "https://services.cancerimagingarchive.net/services/v3/TCIA"
 var client = &http.Client{}
 var logger = log.MustGetLogger("lidc")
@@ -29,10 +29,23 @@ func main() {
 			Value: "json",
 			Usage: "format to download",
 		},
+		cli.StringFlag{
+			Name:  "apikey",
+			Usage: "TCIA API key, to override the internal key",
+		},
+		cli.StringFlag{
+			Name:  "base",
+			Usage: "Base URL for TCIA REST API",
+			Value: baseURL,
+		},
 	}
-	app.Commands = []cli.Command{QueryCommand, FetchCommand}
+	app.Commands = []cli.Command{QueryCommand, FetchCommand, GatherCommand, EvaluateCommand}
 	app.Before = func(context *cli.Context) error {
 		configureLogging(context.Bool("verbose"))
+		if context.String("apikey") != "" {
+			APIKey = context.String("apikey")
+		}
+		baseURL = context.String("base")
 		return nil
 	}
 	app.Run(os.Args)
@@ -41,11 +54,11 @@ func main() {
 func configureLogging(verbose bool) {
 	backend := log.NewLogBackend(os.Stdout, "", 0)
 	f := "%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x} %{message}"
-	f = "%{color}%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x}%{color:reset} %{message}"
+	//	f = "%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x} %{message}"
 	format := log.MustStringFormatter(f)
 	formatter := log.NewBackendFormatter(backend, format)
 	log.SetBackend(formatter)
-	log.SetLevel(log.CRITICAL, "lidc")
+	log.SetLevel(log.ERROR, "lidc")
 	if verbose {
 		log.SetLevel(log.DEBUG, "lidc")
 	}

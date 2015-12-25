@@ -1,11 +1,17 @@
 apply plugin: 'java'
+apply plugin: 'base'
 apply plugin: 'eclipse'
+apply plugin: 'application'
 
+mainClassName = 'com.yittlebits.lidc.Extract'
 
 repositories {
   mavenCentral()
   maven {
     url "http://www.dcm4che.org/maven2"
+  }
+  maven {
+    url "http://nexus.bedatadriven.com/content/groups/public/"
   }
 }
 
@@ -17,6 +23,9 @@ dependencies {
     "dcm4che:dcm4che-image:2.0.24",
     "dcm4che:dcm4che-filecache:2.0.24",
     'org.slf4j:slf4j-jdk14:1.7.12',
+    'org.renjin.cran:oro.nifti:0.4.3-b203',
+    'com.fasterxml.jackson.core:jackson-core:2.6.3',
+    'com.fasterxml.jackson.core:jackson-databind:2.6.3',
   )
 }
 
@@ -24,15 +33,32 @@ task collectJars(type: Copy){
   into "$buildDir/libs/lib"
   from configurations.compile
 }
-jar {
-  manifest {
-    attributes (
-      'Main-Class': 'com.yittlebits.lidc.Extract',
-      "Class-Path": configurations.compile.collect { "lib/" + it.name }.join(' ')
-    )
-  }
+
+task moreStartScripts(type: CreateStartScripts) {
+  mainClassName = 'com.yittlebits.lidc.Extract'
+  applicationName = "Extract"
+  outputDir = new File(project.buildDir, 'scripts')
+  classpath = jar.outputs.files + project.configurations.runtime
+}
+applicationDistribution.into("bin") {
+  from(moreStartScripts)
+  fileMode = 0755
 }
 
-jar.dependsOn collectJars
+// Make all tar tasks gzip
+tasks.withType(Tar){
+  compression = Compression.GZIP
+}
+
+// jar {
+//   manifest {
+//     attributes (
+//       'Main-Class': 'com.yittlebits.lidc.Extract',
+//       "Class-Path": configurations.compile.collect { "lib/" + it.name }.join(' ')
+//     )
+//   }
+// }
+
+// jar.dependsOn collectJars
 
 //-*- mode: groovy -*-

@@ -6,3 +6,15 @@
 LIDC-XML-only
 dicom
 pkg
+dicom-segmented
+build
+segmented
+documentation/_book
+documentation/node_modules
+venv
+.vagrant
+ClusterSoftware
+hugo.pid
+documentation/bower_components
+documentation/public
+*.pid

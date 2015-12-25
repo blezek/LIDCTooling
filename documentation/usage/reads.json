@@ -1,0 +1,319 @@
+{
+  "series_instance_uid" : "1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824",
+  "study_instance_uid" : "1.3.6.1.4.1.14519.5.2.1.6279.6001.339170810277323131167631068432",
+  "patient_name" : null,
+  "patient_id" : "LIDC-IDRI-0078",
+  "manufacturer" : "TOSHIBA",
+  "manufacturer_model_name" : "Aquilion",
+  "patient_sex" : "F",
+  "patient_age" : "064Y",
+  "ethnic_group" : "white-ns",
+  "contrast_bolus_agent" : "W/O_IV_CONTRAST",
+  "body_part_examined" : "CHEST",
+  "scan_options" : "HELICAL_CT",
+  "slice_thickness" : 3.0,
+  "kvp" : 135.0,
+  "data_collection_diameter" : 400.0,
+  "software_versions" : "V2.04ER001",
+  "reconstruction_diameter" : 332.812,
+  "gantry_detector_tilt" : 0.0,
+  "table_height" : 91.0,
+  "rotation_direction" : "CW",
+  "exposure_time" : 500,
+  "xray_tube_current" : 260,
+  "exposure" : 130,
+  "convolution_kernel" : "FC01",
+  "patient_position" : "FFS",
+  "image_position_patient" : [ -165.625, -164.8437, 1403.5 ],
+  "image_orientation_patient" : [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0 ],
+  "reads" : [ {
+    "filename" : "read-0.nii.gz",
+    "nodules" : [ {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 3,
+        "margin" : 4,
+        "lobulation" : 1,
+        "spiculation" : 1,
+        "texture" : 5,
+        "malignancy" : 3
+      },
+      "id" : "3",
+      "centroid" : [ 360.8112244897959, 341.80357142857144, 46.201530612244895 ],
+      "point_count" : 392,
+      "label_value" : 2
+    }, {
+      "characteristics" : {
+        "subtlety" : 4,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 4,
+        "lobulation" : 1,
+        "spiculation" : 2,
+        "texture" : 5,
+        "malignancy" : 3
+      },
+      "id" : "4",
+      "centroid" : [ 331.9068010075567, 198.69017632241815, 25.649874055415616 ],
+      "point_count" : 397,
+      "label_value" : 3
+    }, {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 4,
+        "sphericity" : 3,
+        "margin" : 5,
+        "lobulation" : 2,
+        "spiculation" : 3,
+        "texture" : 5,
+        "malignancy" : 4
+      },
+      "id" : "6",
+      "centroid" : [ 340.5402097902098, 265.9230769230769, 67.5472027972028 ],
+      "point_count" : 572,
+      "label_value" : 5
+    } ],
+    "small_nodules" : [ {
+      "id" : "0",
+      "centroid" : [ 177.0, 158.0, 67.0 ],
+      "point_count" : 1,
+      "label_value" : 1
+    }, {
+      "id" : "5",
+      "centroid" : [ 197.0, 190.0, 76.0 ],
+      "point_count" : 1,
+      "label_value" : 4
+    }, {
+      "id" : "7",
+      "centroid" : [ 336.0, 163.0, 47.0 ],
+      "point_count" : 1,
+      "label_value" : 6
+    } ]
+  }, {
+    "filename" : "read-1.nii.gz",
+    "nodules" : [ {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 2,
+        "lobulation" : 4,
+        "spiculation" : 1,
+        "texture" : 5,
+        "malignancy" : 5
+      },
+      "id" : "12321",
+      "centroid" : [ 341.5372023809524, 266.3497023809524, 67.4702380952381 ],
+      "point_count" : 672,
+      "label_value" : 2
+    }, {
+      "characteristics" : {
+        "subtlety" : 4,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 2,
+        "lobulation" : 3,
+        "spiculation" : 1,
+        "texture" : 4,
+        "malignancy" : 4
+      },
+      "id" : "12325",
+      "centroid" : [ 360.8223350253807, 341.78680203045684, 46.21573604060914 ],
+      "point_count" : 394,
+      "label_value" : 5
+    }, {
+      "characteristics" : {
+        "subtlety" : 4,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 2,
+        "lobulation" : 2,
+        "spiculation" : 1,
+        "texture" : 5,
+        "malignancy" : 4
+      },
+      "id" : "12329",
+      "centroid" : [ 328.60546875, 201.08203125, 25.41015625 ],
+      "point_count" : 512,
+      "label_value" : 7
+    } ],
+    "small_nodules" : [ {
+      "id" : "12317",
+      "centroid" : [ 176.0, 159.0, 67.0 ],
+      "point_count" : 1,
+      "label_value" : 1
+    }, {
+      "id" : "12320",
+      "centroid" : [ 143.0, 172.0, 50.0 ],
+      "point_count" : 1,
+      "label_value" : 3
+    }, {
+      "id" : "12336",
+      "centroid" : [ 406.0, 319.0, 49.0 ],
+      "point_count" : 1,
+      "label_value" : 4
+    }, {
+      "id" : "12340",
+      "centroid" : [ 87.0, 227.0, 40.0 ],
+      "point_count" : 1,
+      "label_value" : 6
+    } ]
+  }, {
+    "filename" : "read-2.nii.gz",
+    "nodules" : [ {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 4,
+        "sphericity" : 4,
+        "margin" : 4,
+        "lobulation" : 4,
+        "spiculation" : 4,
+        "texture" : 5,
+        "malignancy" : 5
+      },
+      "id" : "16309",
+      "centroid" : [ 341.7541729893778, 266.96509863429435, 67.81942336874052 ],
+      "point_count" : 659,
+      "label_value" : 1
+    }, {
+      "characteristics" : {
+        "subtlety" : 4,
+        "internalStructure" : 1,
+        "calcification" : 5,
+        "sphericity" : 5,
+        "margin" : 5,
+        "lobulation" : 1,
+        "spiculation" : 1,
+        "texture" : 5,
+        "malignancy" : 1
+      },
+      "id" : "16332",
+      "centroid" : [ 336.4166666666667, 162.16666666666669, 47.416666666666664 ],
+      "point_count" : 36,
+      "label_value" : 4
+    }, {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 5,
+        "margin" : 2,
+        "lobulation" : 4,
+        "spiculation" : 3,
+        "texture" : 5,
+        "malignancy" : 5
+      },
+      "id" : "16313",
+      "centroid" : [ 361.05243445692884, 342.1385767790262, 46.28089887640449 ],
+      "point_count" : 267,
+      "label_value" : 5
+    }, {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 4,
+        "lobulation" : 4,
+        "spiculation" : 4,
+        "texture" : 5,
+        "malignancy" : 5
+      },
+      "id" : "16317",
+      "centroid" : [ 327.9166666666667, 201.1170634920635, 25.172619047619047 ],
+      "point_count" : 504,
+      "label_value" : 7
+    } ],
+    "small_nodules" : [ {
+      "id" : "16308",
+      "centroid" : [ 143.0, 172.0, 50.0 ],
+      "point_count" : 1,
+      "label_value" : 2
+    }, {
+      "id" : "16324",
+      "centroid" : [ 406.0, 319.0, 49.0 ],
+      "point_count" : 1,
+      "label_value" : 3
+    }, {
+      "id" : "16328",
+      "centroid" : [ 87.0, 227.0, 40.0 ],
+      "point_count" : 1,
+      "label_value" : 6
+    }, {
+      "id" : "16327",
+      "centroid" : [ 127.0, 368.0, 13.0 ],
+      "point_count" : 1,
+      "label_value" : 8
+    } ]
+  }, {
+    "filename" : "read-3.nii.gz",
+    "nodules" : [ {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 2,
+        "lobulation" : 3,
+        "spiculation" : 3,
+        "texture" : 4,
+        "malignancy" : 3
+      },
+      "id" : "2046",
+      "centroid" : [ 341.5311004784689, 265.414673046252, 67.66666666666667 ],
+      "point_count" : 627,
+      "label_value" : 1
+    }, {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 3,
+        "lobulation" : 4,
+        "spiculation" : 4,
+        "texture" : 4,
+        "malignancy" : 3
+      },
+      "id" : "2050",
+      "centroid" : [ 361.25501432664754, 340.0, 46.43553008595988 ],
+      "point_count" : 349,
+      "label_value" : 4
+    }, {
+      "characteristics" : {
+        "subtlety" : 5,
+        "internalStructure" : 1,
+        "calcification" : 6,
+        "sphericity" : 4,
+        "margin" : 3,
+        "lobulation" : 2,
+        "spiculation" : 2,
+        "texture" : 4,
+        "malignancy" : 3
+      },
+      "id" : "2054",
+      "centroid" : [ 332.5566037735849, 197.11949685534591, 25.4811320754717 ],
+      "point_count" : 318,
+      "label_value" : 5
+    } ],
+    "small_nodules" : [ {
+      "id" : "2042",
+      "centroid" : [ 178.0, 158.0, 67.0 ],
+      "point_count" : 1,
+      "label_value" : 2
+    }, {
+      "id" : "2045",
+      "centroid" : [ 143.0, 172.0, 50.0 ],
+      "point_count" : 1,
+      "label_value" : 3
+    } ]
+  } ]
+}

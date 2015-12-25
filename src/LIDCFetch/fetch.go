@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -49,6 +50,12 @@ func fetchImage(context *cli.Context) {
 	}
 	defer resp.Body.Close()
 
+	logger.Debug("Response: %+v", resp)
+	if resp.StatusCode != http.StatusOK {
+		logger.Error("Got bad status '%v' from server", resp.Status)
+		os.Exit(1)
+	}
+
 	// Do we extract somewhere?
 	if context.String("extract") == "" {
 		logger.Debug("Saving to %v", OutputZip)
@@ -73,12 +80,16 @@ func fetchImage(context *cli.Context) {
 			return
 		}
 		defer os.Remove(fid.Name())
+
+		// Someday, add a progress bar
+		// https://github.com/gosuri/uiprogress
 		_, err = io.Copy(fid, resp.Body)
 		if err != nil {
 			logger.Error("Error downloading zip: %v", err.Error())
 			return
 		}
 		fid.Close()
+		logger.Debug("Finished saving to %v", fid.Name())
 		// Unzip in the specified location
 		z, err := zip.OpenReader(fid.Name())
 		if err != nil {
