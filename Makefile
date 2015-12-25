@@ -30,7 +30,9 @@ restart:
 	${MAKE} stop
 	${MAKE} watch
 
-publish: gh-pages build
+publish: gh-pages
+	${MAKE} clean
+	${MAKE} build
 	rsync -ar _book/ gh-pages
 	(cd gh-pages && git add . && git commit -m "publish" && git push)
 
