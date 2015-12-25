@@ -8,4 +8,4 @@ MASTER=$(echo "${cluster_meta}" | grep "master running" | awk '{print $4}')
 
 ssh-add  ~/.ssh/mykey.rsa
 rsync -arv --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
-rsync -arv devops/lidc.sh sgeadmin@$MASTER:
+rsync -arv devops/*.sh sgeadmin@$MASTER:
