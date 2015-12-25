@@ -47,25 +47,31 @@ EXTRACT=Extract
 FETCH=LIDCFetch
 EVALUATE=/software/python/evaluateSegmentation.py
 
-# Locations
-DICOM=/home/sgeadmin/dicom
-SEGMENTED=/home/sgeadmin/segmented
+# Local locations
+DICOM=/tmp/dicom/$JOBID
+SEGMENTED=/tmp/segmented/$JOBID
 
-DB=/home/sgeadmin/lidc.db
+SeriesInstanceUID=`$EXTRACT SeriesInstanceUID /software/$XML`
 
-LIDCFetch --verbose \
-    gather \
-    --db $DB \
-    --extract $EXTRACT \
-    --fetch $FETCH \
-    --lesion $LESION \
-    --evaluate $EVALUATE \
-    --dicom $DICOM \
-    --segmented $SEGMENTED \
-    --clean \
-    /software/$XML
+if [ ! -e /home/sgeadmin/segmented/$SeriesInstanceUID ]; then
 
-
-
+    LIDCFetch --verbose \
+              gather \
+              --extract $EXTRACT \
+              --fetch $FETCH \
+              --lesion $LESION \
+              --evaluate $EVALUATE \
+              --dicom $DICOM \
+              --segmented $SEGMENTED \
+              --clean-dicom \
+              /software/$XML
 
 
+    rsync -r $SEGMENTED/ /home/sgeadmin/segmented
+
+    rm -rf $SEGMENTED
+    rm -rf $DICOM
+
+else
+    echo "Already processed $XML -- early exit"
+fi

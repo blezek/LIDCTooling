@@ -47,7 +47,7 @@ func evaluate(context *cli.Context) {
 			os.Exit(1)
 		}
 	}
-	for _, SegmentedDir := range context.Args() {
+	for idx, SegmentedDir := range context.Args() {
 
 		// Check the segmented directory
 		ReportFile := filepath.Join(SegmentedDir, "reads.json")
@@ -56,7 +56,7 @@ func evaluate(context *cli.Context) {
 			continue
 		}
 
-		logger.Debug("Processing %v", ReportFile)
+		logger.Debug("Processing (%v/%v) %v", idx+1, len(context.Args()), ReportFile)
 		// Now parse the JSON
 		JsonFile := filepath.Join(SegmentedDir, "reads.json")
 		fid, err := os.Open(JsonFile)
@@ -64,8 +64,8 @@ func evaluate(context *cli.Context) {
 			logger.Error("Error opening %v -- %v", JsonFile, err.Error())
 			continue
 		}
-		defer fid.Close()
 		everything, _ := jason.NewObjectFromReader(fid)
+		fid.Close()
 		series_uid, _ := everything.GetString("uid")
 		Save(db, "series", series_uid, everything)
 
@@ -94,8 +94,8 @@ func evaluate(context *cli.Context) {
 
 					// Now, read and combine into a SQLite DB
 					fid, _ := os.Open(measures)
-					defer fid.Close()
 					measure_object, _ := jason.NewObjectFromReader(fid)
+					fid.Close()
 					// The UID is the SHA1 of the command string
 					command_line, _ := measure_object.GetString("command_line")
 					measure_detail, _ := measure_object.GetObject("measures")
