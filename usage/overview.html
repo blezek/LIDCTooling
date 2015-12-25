@@ -5,9 +5,9 @@
         
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Introduction | LIDC Lesion segmentation project</title>
+        <title>Processing | LIDC Lesion segmentation project</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="The LIDC Tooling project is a set of tools for downloading CT datasets from LIDC-IDRI, extracting contours from radiologists reads, segmenting the images and performing simple evaluations on the images.">
+        <meta name="description" content="">
         <meta name="generator" content="GitBook 2.4.3">
         
         
@@ -15,13 +15,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
-        <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
         
-    <link rel="stylesheet" href="gitbook/style.css">
+    <link rel="stylesheet" href="../gitbook/style.css">
     
         
-        <link rel="stylesheet" href="gitbook/plugins/gitbook-plugin-highlight/website.css">
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
         
     
     
@@ -29,8 +29,10 @@
         
     
     
-    <link rel="next" href="./building/building.html" />
+    <link rel="next" href="../usage/manual_processing.html" />
     
+    
+    <link rel="prev" href="../tools/overview.html" />
     
 
         
@@ -38,7 +40,7 @@
     <body>
         
         
-    <div class="book" data-level="0" data-basepath="." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
+    <div class="book" data-level="3" data-basepath=".." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
     
 
 <div class="book-summary">
@@ -56,10 +58,10 @@
 
             
     
-        <li class="chapter active" data-level="0" data-path="index.html">
+        <li class="chapter " data-level="0" data-path="index.html">
             
                 
-                    <a href="./index.html">
+                    <a href="../index.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -72,7 +74,7 @@
         <li class="chapter " data-level="1" data-path="building/building.html">
             
                 
-                    <a href="./building/building.html">
+                    <a href="../building/building.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -87,7 +89,7 @@
         <li class="chapter " data-level="2" data-path="tools/overview.html">
             
                 
-                    <a href="./tools/overview.html">
+                    <a href="../tools/overview.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -99,10 +101,10 @@
             
         </li>
     
-        <li class="chapter " data-level="3" data-path="usage/overview.html">
+        <li class="chapter active" data-level="3" data-path="usage/overview.html">
             
                 
-                    <a href="./usage/overview.html">
+                    <a href="../usage/overview.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -118,7 +120,7 @@
         <li class="chapter " data-level="3.1" data-path="usage/manual_processing.html">
             
                 
-                    <a href="./usage/manual_processing.html">
+                    <a href="../usage/manual_processing.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -133,7 +135,7 @@
         <li class="chapter " data-level="3.2" data-path="usage/aws.html">
             
                 
-                    <a href="./usage/aws.html">
+                    <a href="../usage/aws.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -148,7 +150,7 @@
         <li class="chapter " data-level="3.3" data-path="usage/lidc.html">
             
                 
-                    <a href="./usage/lidc.html">
+                    <a href="../usage/lidc.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -168,7 +170,7 @@
         <li class="chapter " data-level="4" data-path="usage/analysis.html">
             
                 
-                    <a href="./usage/analysis.html">
+                    <a href="../usage/analysis.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -276,7 +278,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="./" >LIDC Lesion segmentation project</a>
+        <a href="../" >LIDC Lesion segmentation project</a>
     </h1>
 </div>
 
@@ -286,8 +288,28 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h1 id="lidc-tooling">LIDC Tooling</h1>
-<p>The <a href="https://github.com/dblezek/LIDCTooling" target="_blank">LIDC Tooling project</a> is a set of tools for downloading CT datasets from <a href="https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI" target="_blank">LIDC-IDRI</a>, extracting contours from radiologists reads, segmenting the images and performing simple evaluations on the images.</p>
+                        <h1 id="lidc-data-conversion">LIDC Data conversion</h1>
+<p>Making LIDC annotations available as DICOM Segmentation Objects.</p>
+<h2 id="abstract">Abstract</h2>
+<p>The Lung Imaging Database Consortium has collected 1000&apos;s of CT scans with hand annotated tumor outlines for nodules &gt; 3 mm.  Nodules smaller than 3 mm are indicated by a single &quot;center of mass&quot; annotation.  This data is stored in XML format and includes 4 readers.  Unfortunately, the format does not lend itself to easy comparison nor analysis.  This project aims to convert LIDC data to a more useful format.</p>
+<h2 id="goal">Goal</h2>
+<ul>
+<li>convert LIDC XML data to DICOM segmentation objects</li>
+<li>export NIfTI volumes of segmentation masks</li>
+<li>segment using the Chest Imaging Platform</li>
+<li>evaluate segmentation results</li>
+<li>collect data into an easy to use form</li>
+</ul>
+<h2 id="approach">Approach</h2>
+<h3 id="automation">Automation</h3>
+<p>This process shall be automated to the extent possible, creating an easy to use, repeatable process for researchers desiring to obtain the LIDC data in a usable format.</p>
+<p>Automation includes:</p>
+<ul>
+<li>download of CT datasets given a LIDC XML</li>
+<li>interaction with the <a href="https://wiki.cancerimagingarchive.net/display/Public/TCIA+Programmatic+Interface+%28REST+API%29+Usage+Guide" target="_blank">LIDC REST services</a> (<a href="TCIA%20REST%20API.pdf">PDF</a>)</li>
+</ul>
+<h3 id="language-platform">Language / Platform</h3>
+<p>While <a href="http://www.slicer.org" target="_blank">Slicer</a> is a natural choice, the process is not likely to be repeated nor does it require integration with Slicer.  LIDC data consists of XML and DICOM, and Java has easy to use libraries for both formats.  Java is natively available on every platform and integrates well with REST services.</p>
 
                     
                     </section>
@@ -298,14 +320,16 @@
         </div>
 
         
+        <a href="../tools/overview.html" class="navigation navigation-prev " aria-label="Previous page: Tools"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./building/building.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Build LIDC Tooling"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="../usage/manual_processing.html" class="navigation navigation-next " aria-label="Next page: Manual processing"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
 
         
-<script src="gitbook/app.js"></script>
+<script src="../gitbook/app.js"></script>
 
 <script>
 require(["gitbook"], function(gitbook) {

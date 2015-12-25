@@ -5,9 +5,9 @@
         
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Introduction | LIDC Lesion segmentation project</title>
+        <title>Processing LIDC using the StarCluster | LIDC Lesion segmentation project</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="The LIDC Tooling project is a set of tools for downloading CT datasets from LIDC-IDRI, extracting contours from radiologists reads, segmenting the images and performing simple evaluations on the images.">
+        <meta name="description" content="">
         <meta name="generator" content="GitBook 2.4.3">
         
         
@@ -15,13 +15,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
-        <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
         
-    <link rel="stylesheet" href="gitbook/style.css">
+    <link rel="stylesheet" href="../gitbook/style.css">
     
         
-        <link rel="stylesheet" href="gitbook/plugins/gitbook-plugin-highlight/website.css">
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
         
     
     
@@ -29,8 +29,10 @@
         
     
     
-    <link rel="next" href="./building/building.html" />
+    <link rel="next" href="../usage/analysis.html" />
     
+    
+    <link rel="prev" href="../usage/aws.html" />
     
 
         
@@ -38,7 +40,7 @@
     <body>
         
         
-    <div class="book" data-level="0" data-basepath="." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
+    <div class="book" data-level="3.3" data-basepath=".." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
     
 
 <div class="book-summary">
@@ -56,10 +58,10 @@
 
             
     
-        <li class="chapter active" data-level="0" data-path="index.html">
+        <li class="chapter " data-level="0" data-path="index.html">
             
                 
-                    <a href="./index.html">
+                    <a href="../index.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -72,7 +74,7 @@
         <li class="chapter " data-level="1" data-path="building/building.html">
             
                 
-                    <a href="./building/building.html">
+                    <a href="../building/building.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -87,7 +89,7 @@
         <li class="chapter " data-level="2" data-path="tools/overview.html">
             
                 
-                    <a href="./tools/overview.html">
+                    <a href="../tools/overview.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -102,7 +104,7 @@
         <li class="chapter " data-level="3" data-path="usage/overview.html">
             
                 
-                    <a href="./usage/overview.html">
+                    <a href="../usage/overview.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -118,7 +120,7 @@
         <li class="chapter " data-level="3.1" data-path="usage/manual_processing.html">
             
                 
-                    <a href="./usage/manual_processing.html">
+                    <a href="../usage/manual_processing.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -133,7 +135,7 @@
         <li class="chapter " data-level="3.2" data-path="usage/aws.html">
             
                 
-                    <a href="./usage/aws.html">
+                    <a href="../usage/aws.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -145,10 +147,10 @@
             
         </li>
     
-        <li class="chapter " data-level="3.3" data-path="usage/lidc.html">
+        <li class="chapter active" data-level="3.3" data-path="usage/lidc.html">
             
                 
-                    <a href="./usage/lidc.html">
+                    <a href="../usage/lidc.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -168,7 +170,7 @@
         <li class="chapter " data-level="4" data-path="usage/analysis.html">
             
                 
-                    <a href="./usage/analysis.html">
+                    <a href="../usage/analysis.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -276,7 +278,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="./" >LIDC Lesion segmentation project</a>
+        <a href="../" >LIDC Lesion segmentation project</a>
     </h1>
 </div>
 
@@ -286,8 +288,38 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h1 id="lidc-tooling">LIDC Tooling</h1>
-<p>The <a href="https://github.com/dblezek/LIDCTooling" target="_blank">LIDC Tooling project</a> is a set of tools for downloading CT datasets from <a href="https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI" target="_blank">LIDC-IDRI</a>, extracting contours from radiologists reads, segmenting the images and performing simple evaluations on the images.</p>
+                        <h1 id="running-the-lidc-experiment-on-the-aws-cluster">Running the LIDC experiment on the AWS cluster</h1>
+<p>Start up the cluster</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Startup a cluster called &apos;lidc&apos; using the &apos;lidccluster&apos; template</span>
+. venv/bin/activate
+starcluster start -c lidccluster lidc
+</code></pre>
+<p>Copy software the slow way...</p>
+<pre><code class="lang-bash">starcluster put lidc --user sgeadmin ClusterSoftware/ /software/
+starcluster put lidc --user sgeadmin  devops/lidc.sh /home/sgeadmin/lidc.sh
+</code></pre>
+<p>or use rsync</p>
+<pre><code class="lang-bash">devops/cluster-install.sh
+</code></pre>
+<p>Log in to the cluster as <code>sgeadmin</code>:</p>
+<pre><code>starcluster sshmaster --user sgeadmin lidc
+</code></pre><p>Launch the processing job:</p>
+<pre><code>qsub lidc.sh
+</code></pre><p>Launch the evaluation job:</p>
+<pre><code># Evaluate will hold until the lidc job is done.
+qsub evaluate.sh
+</code></pre><p>Use the <a href="http://star.mit.edu/cluster/docs/latest/manual/load_balancer.html" target="_blank">elastic load balancer</a> to ramp up nodes.</p>
+<pre><code># -m 10     -- maximum number of nodes
+# -a 2      -- add 2 nodes at a time
+# -w 300    -- start adding nodes after jobs have waited 5 minutes (5*60 seconds)
+starcluster loadbalance -w 300 -m 10 -a 2 lidc
+</code></pre><h2 id="stop-the-nodes">Stop the nodes</h2>
+<pre><code class="lang-bash"><span class="hljs-comment"># Force remove nodes 1-9</span>
+starcluster removenode --force lidc node001 node002 node003 node004 node005 node006 node007 node008 node009
+</code></pre>
+<h2 id="get-data-from-the-nodes">Get data from the nodes</h2>
+<pre><code>starcluster get --user sgeadmin lidc lidc.db .
+</code></pre><h3 id="fixing-problems">Fixing problems</h3>
 
                     
                     </section>
@@ -298,14 +330,16 @@
         </div>
 
         
+        <a href="../usage/aws.html" class="navigation navigation-prev " aria-label="Previous page: Configuring on AWS"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./building/building.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Build LIDC Tooling"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="../usage/analysis.html" class="navigation navigation-next " aria-label="Next page: Analysis of collected data"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
 
         
-<script src="gitbook/app.js"></script>
+<script src="../gitbook/app.js"></script>
 
 <script>
 require(["gitbook"], function(gitbook) {

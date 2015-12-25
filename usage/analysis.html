@@ -1,0 +1,757 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    
+    <head>
+        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Analysis of collected data | LIDC Lesion segmentation project</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.4.3">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
+        
+    
+    
+
+        
+    
+    
+    
+    <link rel="prev" href="../usage/lidc.html" />
+    
+
+        
+    </head>
+    <body>
+        
+        
+    <div class="book" data-level="4" data-basepath=".." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
+    
+
+<div class="book-summary">
+    <div class="book-search" role="search">
+        <input type="text" placeholder="Type to search" class="form-control" />
+    </div>
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" data-path="building/building.html">
+            
+                
+                    <a href="../building/building.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.</b>
+                        
+                        Build LIDC Tooling
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2" data-path="tools/overview.html">
+            
+                
+                    <a href="../tools/overview.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.</b>
+                        
+                        Tools
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3" data-path="usage/overview.html">
+            
+                
+                    <a href="../usage/overview.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.</b>
+                        
+                        Processing
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="usage/manual_processing.html">
+            
+                
+                    <a href="../usage/manual_processing.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Manual processing
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.2" data-path="usage/aws.html">
+            
+                
+                    <a href="../usage/aws.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.2.</b>
+                        
+                        Configuring on AWS
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.3" data-path="usage/lidc.html">
+            
+                
+                    <a href="../usage/lidc.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.3.</b>
+                        
+                        Processing LIDC using the StarCluster
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter active" data-level="4" data-path="usage/analysis.html">
+            
+                
+                    <a href="../usage/analysis.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.</b>
+                        
+                        Analysis of collected data
+                    </a>
+            
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    <a href="#" class="btn pull-left toggle-summary" aria-label="Table of Contents"><i class="fa fa-align-justify"></i></a>
+    <a href="#" class="btn pull-left toggle-search" aria-label="Search"><i class="fa fa-search"></i></a>
+    
+    <div id="font-settings-wrapper" class="dropdown pull-left">
+        <a href="#" class="btn toggle-dropdown" aria-label="Font Settings"><i class="fa fa-font"></i>
+        </a>
+        <div class="dropdown-menu font-settings">
+    <div class="dropdown-caret">
+        <span class="caret-outer"></span>
+        <span class="caret-inner"></span>
+    </div>
+
+    <div class="buttons">
+        <button type="button" id="reduce-font-size" class="button size-2">A</button>
+        <button type="button" id="enlarge-font-size" class="button size-2">A</button>
+    </div>
+
+    <div class="buttons font-family-list">
+        <button type="button" data-font="0" class="button">Serif</button>
+        <button type="button" data-font="1" class="button">Sans</button>
+    </div>
+
+    <div class="buttons color-theme-list">
+        <button type="button" id="color-theme-preview-0" class="button size-3" data-theme="0">White</button>
+        <button type="button" id="color-theme-preview-1" class="button size-3" data-theme="1">Sepia</button>
+        <button type="button" id="color-theme-preview-2" class="button size-3" data-theme="2">Night</button>
+    </div>
+</div>
+
+    </div>
+
+    <!-- Actions Right -->
+    
+    <div class="dropdown pull-right">
+        <a href="#" class="btn toggle-dropdown" aria-label="Share"><i class="fa fa-share-alt"></i>
+        </a>
+        <div class="dropdown-menu font-settings dropdown-left">
+            <div class="dropdown-caret">
+                <span class="caret-outer"></span>
+                <span class="caret-inner"></span>
+            </div>
+            <div class="buttons">
+                <button type="button" data-sharing="twitter" class="button">
+                    Share on Twitter
+                </button>
+                <button type="button" data-sharing="google-plus" class="button">
+                    Share on Google
+                </button>
+                <button type="button" data-sharing="facebook" class="button">
+                    Share on Facebook
+                </button>
+                <button type="button" data-sharing="weibo" class="button">
+                    Share on Weibo
+                </button>
+                <button type="button" data-sharing="instapaper" class="button">
+                    Share on Instapaper
+                </button>
+            </div>
+        </div>
+    </div>
+    
+
+    
+    <a href="#" target="_blank" class="btn pull-right google-plus-sharing-link sharing-link" data-sharing="google-plus" aria-label="Google"><i class="fa fa-google-plus"></i></a>
+    
+    
+    <a href="#" target="_blank" class="btn pull-right facebook-sharing-link sharing-link" data-sharing="facebook" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
+    
+    
+    <a href="#" target="_blank" class="btn pull-right twitter-sharing-link sharing-link" data-sharing="twitter" aria-label="Twitter"><i class="fa fa-twitter"></i></a>
+    
+    
+    
+
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../" >LIDC Lesion segmentation project</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h1 id="data-analysis">Data analysis</h1>
+<h2 id="overview">Overview</h2>
+<p>The data generated consists of NIfTI, and JSON, with an SQLite database summarizing all the processing.  The files generated for the read described <code>158.xml</code> are:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>158.xml</code></td>
+<td>the original XML file containing read information</td>
+</tr>
+<tr>
+<td><code>image.nii.gz</code></td>
+<td>A NIfTI version of the DICOM dataset</td>
+</tr>
+<tr>
+<td><code>reads.json</code></td>
+<td>A JSON description of the XML file.  This file is more organized than the XML and, in particular, has normalized nodule numbers so nodules may be compared across readers.</td>
+</tr>
+<tr>
+<td><code>read_#.nii.gz</code></td>
+<td>Labelmap NIfTI file of each segmented nodule for reader <code>#</code>.</td>
+</tr>
+<tr>
+<td><code>read_#_nodule_#.nii.gz</code></td>
+<td><code>GenerateLesionSegmentation</code> output corresponding to the centroid determined by reader <code>#</code> for <code>nodule_#</code>.  This file is a level set and is typically thresholded at <code>-4</code>.</td>
+</tr>
+<tr>
+<td><code>read_#_nodule_#_eval.json</code></td>
+<td>Distance measures comparing the human <code>read_#</code> to the algorithm results for <code>nodule_#</code>.  The metrics are described below.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="metrics">Metrics</h2>
+<p>Metrics are generated by SimpleITK&apos;s <a href="http://www.itk.org/SimpleITKDoxygen/html/classitk_1_1simple_1_1LabelOverlapMeasuresImageFilter.html" target="_blank"><code>LabelOverlapMeasuresImageFilter</code></a> contributed in an Insight Journal paper <a href="http://www.insight-journal.org/browse/publication/707" target="_blank">&quot;Introducing Dice, Jaccard, and Other Label Overlap Measures To ITK&quot;</a> by Nicholas J. Tustison, James C. Gee.  The metrics generated are:</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>false_negative_error</td>
+<td></td>
+</tr>
+<tr>
+<td>false_positive_error</td>
+<td></td>
+</tr>
+<tr>
+<td>mean_overlap</td>
+<td></td>
+</tr>
+<tr>
+<td>union_overlap</td>
+<td></td>
+</tr>
+<tr>
+<td>volume_similarity</td>
+<td></td>
+</tr>
+<tr>
+<td>jaccard_coefficient</td>
+<td></td>
+</tr>
+<tr>
+<td>dice_coefficient</td>
+<td></td>
+</tr>
+<tr>
+<td>hausdorff_distance</td>
+<td></td>
+</tr>
+<tr>
+<td>average_hausdorff_distance</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sqlite-database">SQLite Database</h2>
+<p>After the <code>lidc.sh</code> script generates all the files, <code>evaluate.sh</code> passes through the data and collects all the metrics into a <a href="https://www.sqlite.org/" target="_blank">SQLite database</a>.  The database contains many tables.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nodules</code></td>
+<td>describes a nodule in terms of a <code>normalized_nodule_id</code> and the <code>series_uid</code> where it was found</td>
+</tr>
+<tr>
+<td><code>reads</code></td>
+<td>describes a human reader&apos;s impression of a particular <code>nodule</code>.  Includes subjective description, and location of the nodule as determined by the reader.</td>
+</tr>
+<tr>
+<td><code>series</code></td>
+<td>describes a LIDC DICOM series, related to <code>nodules</code> by <code>series_uid</code></td>
+</tr>
+<tr>
+<td><code>measures</code></td>
+<td>describes the metrics generated by an automatic segmentation of nodule <code>nodule_uid</code>, of the read <code>read_uid</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="useful-queries">Useful queries</h2>
+<p>SQLite provides a command line query interface with CSV output.</p>
+<pre><code class="lang-bash">sqlite3 -header -csv test.db <span class="hljs-string">&quot;select * from nodules&quot;</span>
+</code></pre>
+<h3 id="select-average-hausdorff-distance-for-all-reads">Select average Hausdorff distance for all reads</h3>
+<pre><code class="lang-bash"><span class="hljs-comment"># spiculation_vs_hausdorff_distance.sql</span>
+select nodules.normalized_nodule_id, series.series_instance_uid, reads.spiculation, measures.average_hausdorff_distance, measures.command_line
+
+from
+  nodules, series, reads, measures
+
+<span class="hljs-built_in">where</span>
+  nodules.series_uid = series.uid
+  and nodules.normalized_nodule_id = reads.normalized_nodule_id
+  and reads.uid = measures.read_uid
+
+order by
+  series.series_instance_uid, nodules.normalized_nodule_id
+
+sqlite3 -header -csv test.db <span class="hljs-string">&quot;.read spiculation_vs_hausdorff_distance.sql&quot;</span> &gt; spiculation_vs_hausdorff_distance.csv
+</code></pre>
+<h3 id="sample-plot-using-r">Sample plot using R</h3>
+<pre><code>spiculation_vs_hausdorff_distance.R
+
+png(&quot;spiculation_vs_hausdorff_distance.png&quot;, height = 1200, width = 1600)
+d &lt;- read.csv(&quot;spiculation_vs_hausdorff_distance.csv&quot;)
+plot ( d$spiculation, d$average_hausdorff_distance, main=&quot;Segmentation distance vs. Spiculation&quot;, xlab=&quot;Spiculation (1-5)&quot;, ylab=&quot;Avg. Hausdorff Distance (mm)&quot;)
+dev.off()
+</code></pre><pre><code># generate the plot into spiculation_vs_hausdorff_distance.png
+Rscript spiculation_vs_hausdorff_distance.R
+</code></pre><h2 id="table-details">Table details</h2>
+<p><strong>nodules</strong></p>
+<table>
+<thead>
+<tr>
+<th>column</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>series_uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>normalized_nodule_id</td>
+<td>int</td>
+</tr>
+</tbody>
+</table>
+<p><strong>reads</strong></p>
+<table>
+<thead>
+<tr>
+<th>column</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>nodule_uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>normalized_nodule_id</td>
+<td>int</td>
+</tr>
+<tr>
+<td>id</td>
+<td>text</td>
+</tr>
+<tr>
+<td>centroid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>centroidLPS</td>
+<td>text</td>
+</tr>
+<tr>
+<td>point_count</td>
+<td>int</td>
+</tr>
+<tr>
+<td>label_value</td>
+<td>int</td>
+</tr>
+<tr>
+<td>filled</td>
+<td>int</td>
+</tr>
+<tr>
+<td>subtlety</td>
+<td>int</td>
+</tr>
+<tr>
+<td>internalStructure</td>
+<td>int</td>
+</tr>
+<tr>
+<td>calcification</td>
+<td>int</td>
+</tr>
+<tr>
+<td>sphericity</td>
+<td>int</td>
+</tr>
+<tr>
+<td>margin</td>
+<td>int</td>
+</tr>
+<tr>
+<td>lobulation</td>
+<td>int</td>
+</tr>
+<tr>
+<td>spiculation</td>
+<td>int</td>
+</tr>
+<tr>
+<td>texture</td>
+<td>int</td>
+</tr>
+<tr>
+<td>malignancy</td>
+<td>int</td>
+</tr>
+</tbody>
+</table>
+<p><strong>series</strong></p>
+<table>
+<thead>
+<tr>
+<th>column</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>series_instance_uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>study_instance_uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>patient_name</td>
+<td>text</td>
+</tr>
+<tr>
+<td>patient_id</td>
+<td>text</td>
+</tr>
+<tr>
+<td>manufacturer</td>
+<td>text</td>
+</tr>
+<tr>
+<td>manufacturer_model_name</td>
+<td>text</td>
+</tr>
+<tr>
+<td>patient_sex</td>
+<td>text</td>
+</tr>
+<tr>
+<td>patient_age</td>
+<td>text</td>
+</tr>
+<tr>
+<td>ethnic_group</td>
+<td>text</td>
+</tr>
+<tr>
+<td>contrast_bolus_agent</td>
+<td>text</td>
+</tr>
+<tr>
+<td>body_part_examined</td>
+<td>text</td>
+</tr>
+<tr>
+<td>scan_options</td>
+<td>text</td>
+</tr>
+<tr>
+<td>slice_thickness</td>
+<td>float</td>
+</tr>
+<tr>
+<td>kvp</td>
+<td>float</td>
+</tr>
+<tr>
+<td>data_collection_diameter</td>
+<td>float</td>
+</tr>
+<tr>
+<td>software_versions</td>
+<td>text</td>
+</tr>
+<tr>
+<td>reconstruction_diameter</td>
+<td>float</td>
+</tr>
+<tr>
+<td>gantry_detector_tilt</td>
+<td>float</td>
+</tr>
+<tr>
+<td>table_height</td>
+<td>float</td>
+</tr>
+<tr>
+<td>rotation_direction</td>
+<td>text</td>
+</tr>
+<tr>
+<td>exposure_time</td>
+<td>float</td>
+</tr>
+<tr>
+<td>xray_tube_current</td>
+<td>float</td>
+</tr>
+<tr>
+<td>exposure</td>
+<td>float</td>
+</tr>
+<tr>
+<td>convolution_kernel</td>
+<td>text</td>
+</tr>
+<tr>
+<td>patient_position</td>
+<td>text</td>
+</tr>
+<tr>
+<td>image_position_patient</td>
+<td>text</td>
+</tr>
+<tr>
+<td>image_orientation_patient</td>
+<td>text</td>
+</tr>
+<tr>
+<td>filename</td>
+<td>text</td>
+</tr>
+</tbody>
+</table>
+<p><strong>measure</strong></p>
+<table>
+<thead>
+<tr>
+<th>column</th>
+<th>type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>nodule_uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>read_uid</td>
+<td>text</td>
+</tr>
+<tr>
+<td>command_line</td>
+<td>text</td>
+</tr>
+<tr>
+<td>false_negative_error</td>
+<td>float</td>
+</tr>
+<tr>
+<td>dice_coefficient</td>
+<td>float</td>
+</tr>
+<tr>
+<td>volume_similarity</td>
+<td>float</td>
+</tr>
+<tr>
+<td>false_positive_error</td>
+<td>float</td>
+</tr>
+<tr>
+<td>mean_overlap</td>
+<td>float</td>
+</tr>
+<tr>
+<td>union_overlap</td>
+<td>float</td>
+</tr>
+<tr>
+<td>jaccard_coefficient</td>
+<td>float</td>
+</tr>
+<tr>
+<td>hausdorff_distance</td>
+<td>float</td>
+</tr>
+<tr>
+<td>average_hausdorff_distance</td>
+<td>float</td>
+</tr>
+</tbody>
+</table>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../usage/lidc.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Processing LIDC using the StarCluster"><i class="fa fa-angle-left"></i></a>
+        
+        
+    </div>
+</div>
+
+        
+<script src="../gitbook/app.js"></script>
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"fontSettings":{"theme":null,"family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        
+    </body>
+    
+</html>

@@ -5,9 +5,9 @@
         
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Introduction | LIDC Lesion segmentation project</title>
+        <title>Configuring on AWS | LIDC Lesion segmentation project</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <meta name="description" content="The LIDC Tooling project is a set of tools for downloading CT datasets from LIDC-IDRI, extracting contours from radiologists reads, segmenting the images and performing simple evaluations on the images.">
+        <meta name="description" content="">
         <meta name="generator" content="GitBook 2.4.3">
         
         
@@ -15,13 +15,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black">
-        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
-        <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
         
-    <link rel="stylesheet" href="gitbook/style.css">
+    <link rel="stylesheet" href="../gitbook/style.css">
     
         
-        <link rel="stylesheet" href="gitbook/plugins/gitbook-plugin-highlight/website.css">
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
         
     
     
@@ -29,8 +29,10 @@
         
     
     
-    <link rel="next" href="./building/building.html" />
+    <link rel="next" href="../usage/lidc.html" />
     
+    
+    <link rel="prev" href="../usage/manual_processing.html" />
     
 
         
@@ -38,7 +40,7 @@
     <body>
         
         
-    <div class="book" data-level="0" data-basepath="." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
+    <div class="book" data-level="3.2" data-basepath=".." data-revision="Fri Dec 25 2015 11:26:28 GMT-0600 (CST)">
     
 
 <div class="book-summary">
@@ -56,10 +58,10 @@
 
             
     
-        <li class="chapter active" data-level="0" data-path="index.html">
+        <li class="chapter " data-level="0" data-path="index.html">
             
                 
-                    <a href="./index.html">
+                    <a href="../index.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -72,7 +74,7 @@
         <li class="chapter " data-level="1" data-path="building/building.html">
             
                 
-                    <a href="./building/building.html">
+                    <a href="../building/building.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -87,7 +89,7 @@
         <li class="chapter " data-level="2" data-path="tools/overview.html">
             
                 
-                    <a href="./tools/overview.html">
+                    <a href="../tools/overview.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -102,7 +104,7 @@
         <li class="chapter " data-level="3" data-path="usage/overview.html">
             
                 
-                    <a href="./usage/overview.html">
+                    <a href="../usage/overview.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -118,7 +120,7 @@
         <li class="chapter " data-level="3.1" data-path="usage/manual_processing.html">
             
                 
-                    <a href="./usage/manual_processing.html">
+                    <a href="../usage/manual_processing.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -130,10 +132,10 @@
             
         </li>
     
-        <li class="chapter " data-level="3.2" data-path="usage/aws.html">
+        <li class="chapter active" data-level="3.2" data-path="usage/aws.html">
             
                 
-                    <a href="./usage/aws.html">
+                    <a href="../usage/aws.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -148,7 +150,7 @@
         <li class="chapter " data-level="3.3" data-path="usage/lidc.html">
             
                 
-                    <a href="./usage/lidc.html">
+                    <a href="../usage/lidc.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -168,7 +170,7 @@
         <li class="chapter " data-level="4" data-path="usage/analysis.html">
             
                 
-                    <a href="./usage/analysis.html">
+                    <a href="../usage/analysis.html">
                 
                         <i class="fa fa-check"></i>
                         
@@ -276,7 +278,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="./" >LIDC Lesion segmentation project</a>
+        <a href="../" >LIDC Lesion segmentation project</a>
     </h1>
 </div>
 
@@ -286,9 +288,126 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h1 id="lidc-tooling">LIDC Tooling</h1>
-<p>The <a href="https://github.com/dblezek/LIDCTooling" target="_blank">LIDC Tooling project</a> is a set of tools for downloading CT datasets from <a href="https://wiki.cancerimagingarchive.net/display/Public/LIDC-IDRI" target="_blank">LIDC-IDRI</a>, extracting contours from radiologists reads, segmenting the images and performing simple evaluations on the images.</p>
+                        <h1 id="processing-on-aws">Processing on AWS</h1>
+<p>Processing the required data (1300+ studies) can be efficiently done using cluster computing.  A <a href="http://star.mit.edu/cluster/docs/latest/index.html" target="_blank">StarCluster</a> is an on-demand AWS cluster of any size.</p>
+<h2 id="pricing-analysis">Pricing analysis</h2>
+<p>The LIDC data is approximately 150G.  EBS storage is $0.05 per GB-month.  To store the LIDC data would cost $7.50 / month on Magnetic volumes, $15.00 / month using SSD.  Processing will likely take 3x, so we&apos;ll allocate 500G at a cost of $25.00 / month.</p>
+<p>Spot instances are a great value, a <code>c4.large</code> has 2 vCPU and 3.75G memory and typically runs ~ $0.01 / hr.  Requesting spot instances is easy, set <code>spot_bid = 0.02</code> (or the maximum bid).</p>
+<h3 id="free-tier">Free tier</h3>
+<ul>
+<li>Gives 750 hrs of <code>t2.micro</code> or <code>t1.micro</code></li>
+<li>Gives 30 GB EBS storage / month (SSD or magnetic)</li>
+</ul>
+<h2 id="install-starcluster-locally">Install StarCluster locally</h2>
+<p><a href="http://star.mit.edu/cluster/docs/latest/index.html" target="_blank">StarCluster</a> is a project to make mananging a OpenGridEngine cluster on AWS easy.</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Install Python&apos;s virtualenv support</span>
+pip install --user virtualenv
 
+<span class="hljs-comment"># Create the virtualenv in the local directory</span>
+virtualenv venv
+
+<span class="hljs-comment"># Activate the local virtualenv</span>
+<span class="hljs-built_in">source</span> venv/bin/activate
+
+<span class="hljs-comment"># Install StarCluster in the virtualenv</span>
+easy_install StarCluster
+
+<span class="hljs-comment"># Install plotting software, didn&apos;t work</span>
+<span class="hljs-comment"># easy_install matplotlib</span>
+<span class="hljs-comment"># easy_install numpy</span>
+</code></pre>
+<p>Cool! Now StarCluster is installed and we can do interesting things with it.</p>
+<h2 id="configure">Configure</h2>
+<p>Setup the configuration:</p>
+<pre><code class="lang-bash">starcluster <span class="hljs-built_in">help</span>
+</code></pre>
+<p>Select <code>2</code> to write the config file.  The edit according to the <a href="http://star.mit.edu/cluster/docs/latest/quickstart.html" target="_blank">Quick Start guide</a>.  Using a 2 node cluster of <code>t2.micro</code> instances to work with the AMI instance and conform to the AWS free tier.</p>
+<p>Using a non-root account called <code>cluster</code>.  Created a group called <code>starcluster</code> and gave it EC2 and IAM access.</p>
+<h3 id="specific-configuration-changes">Specific configuration changes</h3>
+<pre><code>[aws info]
+AWS_ACCESS_KEY_ID = ************* #your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY =  ***************** #your_secret_access_key
+# replace this with your account number
+AWS_USER_ID= ********* #your userid
+
+[cluster smallcluster]
+CLUSTER_SIZE = 2
+NODE_IMAGE = ami-3393a45a
+# Instance type, change later
+NODE_INSTANCE_TYPE = t1.micro
+
+# Use the volume
+VOLUMES = data,software
+
+# Create an EBS volumes
+[volume data]
+VOLUME_ID = vol-*****
+MOUNT_PATH = /home
+
+[volume software]
+VOLUME_ID = vol-*****
+MOUNT_PATH = /software
+</code></pre><h3 id="create-a-volume">Create a volume</h3>
+<p><a href="http://star.mit.edu/cluster/docs/latest/manual/volumes.html" target="_blank">Creating and formatting</a> an EBS volume is relatively easy:</p>
+<pre><code class="lang-bash">starcluster createvolume --name=lidc-data --shutdown-volume-host <span class="hljs-number">300</span> us-east-<span class="hljs-number">1</span>a
+starcluster createvolume --name=lidc-software --shutdown-volume-host <span class="hljs-number">8</span> us-east-<span class="hljs-number">1</span>a
+</code></pre>
+<p>Creates a <code>10 GB</code> volume named <code>lidc-data</code> in the <code>us-east-1a</code> zone, shutting down the creation host afterward.  This command may also bid on a spot instance for $0.10 with the <code>--bid 0.10</code> flag.  The bid is not necessary for a <code>t1.micro</code> instance, because it cost $0.05 / hr.</p>
+<h3 id="resize-a-volume">Resize a volume</h3>
+<p><a href="http://star.mit.edu/cluster/docs/latest/manual/volumes.html#resizing-volumes" target="_blank">Resizing a volume</a> is very easy.</p>
+<pre><code class="lang-bash"><span class="hljs-comment"># Gather some information</span>
+starcluster listvolumes
+<span class="hljs-comment"># Do the resze</span>
+starcluster resizevolume --shutdown-volume-host vol-<span class="hljs-comment">##### 20</span>
+</code></pre>
+<p>This resizes the volume <code>vol-#####</code> to 20 Gb and will shutdown the volume host when the command completes.</p>
+<p>starcluster resizevolume --shutdown-volume-host vol-7340df8e 250</p>
+<h3 id="create-a-keypair">Create a keypair:</h3>
+<pre><code>starcluster createkey mykey -o ~/.ssh/mykey.rsa
+</code></pre><p>And started the cluster:</p>
+<pre><code>starcluster start test
+
+# Start a bigger cluster, 8 nodes 4 CPU / 7.5G 
+# starcluster start -c lidc lidc
+</code></pre><p>Log in:</p>
+<pre><code># As root
+starcluster sshmaster test
+
+# As sgeadmin
+starcluster sshmaster -u sgeadmin test
+</code></pre><h2 id="do-a-little-test">Do a little test</h2>
+<pre><code>starcluster sshmaster -u sgeadmin test
+cat &gt; sleep.pbs &lt;&lt;EOF
+#!/bin/sh
+
+for i in {1..60} ; do
+       echo $i
+       sleep 5
+done
+EOF
+
+chmod 755 sleep.pbs
+
+# submit
+for i in {1..5} ; do
+  qsub -o sleep.\$JOB_ID.log -j yes sleep.pbs
+done
+
+# watch
+watch qstat -f
+</code></pre><h2 id="shutdown-the-cluster">Shutdown the cluster</h2>
+<p>If the cluster is EBS backed, it can be safely shutdown and restarted with all disks stored on EBS.</p>
+<pre><code>starcluster stop test
+</code></pre><p>To fully delete the cluster, terminate it:</p>
+<pre><code># Poof!
+starcluster terminate test
+</code></pre><h2 id="vagrant-building-tooling-for-linux">Vagrant / Building Tooling for Linux</h2>
+<p>Create a Vagrant box to build LIDCTooling.</p>
+<pre><code>vagrant init ubuntu/precise64; vagrant up --provider virtualbox
+</code></pre><p>Build instructions are found in <code>buildVagrant.sh</code>, and result in software installed in <code>ClusterSoftware</code>.</p>
+<h2 id="copy-software-to-starcluster">Copy software to StarCluster</h2>
+<pre><code>starcluster put test --user sgeadmin ClusterSoftware /software/ClusterSoftware
+</code></pre>
                     
                     </section>
                 
@@ -298,14 +417,16 @@
         </div>
 
         
+        <a href="../usage/manual_processing.html" class="navigation navigation-prev " aria-label="Previous page: Manual processing"><i class="fa fa-angle-left"></i></a>
         
-        <a href="./building/building.html" class="navigation navigation-next navigation-unique" aria-label="Next page: Build LIDC Tooling"><i class="fa fa-angle-right"></i></a>
+        
+        <a href="../usage/lidc.html" class="navigation navigation-next " aria-label="Next page: Processing LIDC using the StarCluster"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
 
         
-<script src="gitbook/app.js"></script>
+<script src="../gitbook/app.js"></script>
 
 <script>
 require(["gitbook"], function(gitbook) {
