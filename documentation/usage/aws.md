@@ -1,8 +1,3 @@
----
-title: "Processing on AWS"
-weight: -80
----
-
 # Processing on AWS
 
 Processing the required data (1300+ studies) can be efficiently done using cluster computing.  A [StarCluster](http://star.mit.edu/cluster/docs/latest/index.html) is an on-demand AWS cluster of any size.
@@ -18,7 +13,7 @@ Spot instances are a great value, a `c4.large` has 2 vCPU and 3.75G memory and t
 - Gives 750 hrs of `t2.micro` or `t1.micro`
 - Gives 30 GB EBS storage / month (SSD or magnetic)
 
-## Install StarCluster
+## Install StarCluster locally
 
 [StarCluster](http://star.mit.edu/cluster/docs/latest/index.html) is a project to make mananging a OpenGridEngine cluster on AWS easy.
 
@@ -35,9 +30,9 @@ source venv/bin/activate
 # Install StarCluster in the virtualenv
 easy_install StarCluster
 
-# Install plotting software
-easy_install matplotlib
-easy_install numpy
+# Install plotting software, didn't work
+# easy_install matplotlib
+# easy_install numpy
 ```
 
 Cool! Now StarCluster is installed and we can do interesting things with it.
@@ -70,7 +65,7 @@ NODE_IMAGE = ami-3393a45a
 NODE_INSTANCE_TYPE = t1.micro
 
 # Use the volume
-VOLUMES = data
+VOLUMES = data,software
 
 # Create an EBS volumes
 [volume data]
@@ -87,11 +82,26 @@ MOUNT_PATH = /software
 [Creating and formatting](http://star.mit.edu/cluster/docs/latest/manual/volumes.html) an EBS volume is relatively easy:
 
 ```bash
-starcluster createvolume --name=lidc-data --shutdown-volume-host --bid 0.05 100 us-east-1a
-starcluster createvolume --name=lidc-software --shutdown-volume-host --bid 0.05 8 us-east-1a
+starcluster createvolume --name=lidc-data --shutdown-volume-host 300 us-east-1a
+starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1a
 ```
 
-Creates a `10 GB` volume named `lidc-data` in the `us-east-1a` zone, shutting down the creation host afterward.  Also bids on a spot instance for $0.10.  The bid is not necessary for a `t1.micro` instance, because it cost $0.05 / hr.
+Creates a `10 GB` volume named `lidc-data` in the `us-east-1a` zone, shutting down the creation host afterward.  This command may also bid on a spot instance for $0.10 with the `--bid 0.10` flag.  The bid is not necessary for a `t1.micro` instance, because it cost $0.05 / hr.
+
+### Resize a volume
+
+[Resizing a volume](http://star.mit.edu/cluster/docs/latest/manual/volumes.html#resizing-volumes) is very easy.
+
+```bash
+# Gather some information
+starcluster listvolumes
+# Do the resze
+starcluster resizevolume --shutdown-volume-host vol-##### 20
+```
+
+This resizes the volume `vol-#####` to 20 Gb and will shutdown the volume host when the command completes.
+
+starcluster resizevolume --shutdown-volume-host vol-7340df8e 250
 
 
 ### Create a keypair:

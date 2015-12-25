@@ -22,17 +22,12 @@ help:
 open:
 	open http://localhost:4000
 
-watch: gitbook.pid setup
+watch: setup
+	node_modules/.bin/gitbook serve
 
 restart:
 	${MAKE} stop
 	${MAKE} watch
-
-gitbook.pid:
-	{ node_modules/.bin/gitbook serve & echo $$! > $@; }
-
-stop: 
-	test -e gitbook.pid && kill `cat gitbook.pid` && rm gitbook.pid
 
 publish: gh-pages build
 	rsync -ar _book/ gh-pages

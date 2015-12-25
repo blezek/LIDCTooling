@@ -13,8 +13,6 @@ cmake ..
 make # wait for it...
 ```
 
-# LIDCTooling
-
 ## LIDCFetch
 
 `LIDCFetch` interacts with the LIDC website to fetch DICOM images.
@@ -25,7 +23,6 @@ cd LIDCTooling
 # Build GO
 make build
 ```
-
 
 ## Extract
 
@@ -43,7 +40,15 @@ The built application can be run as:
 ```
 build/install/LIDCTooling/bin/Extract
 ```
-
 
+# Building using Vagrant
+
+[Vagrant](https://www.vagrantup.com/) is useful for pre-compiling the tools rather than compiling on the (expensive) cluster.  Bring up a Vagrant image, compile all the source and install back in the host computer in the `ClusterSoftware` directory.
+
+```
+vagrant up
+vagrant ssh
+. /vagrant/buildVagrant.sh
+```
 
 

@@ -10,6 +10,9 @@ The Lung Imaging Database Consortium has collected 1000's of CT scans with hand 
 
 - convert LIDC XML data to DICOM segmentation objects
 - export NIfTI volumes of segmentation masks
+- segment using the Chest Imaging Platform
+- evaluate segmentation results
+- collect data into an easy to use form
 
 ## Approach
 
