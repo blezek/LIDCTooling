@@ -185,3 +185,39 @@ Build instructions are found in `buildVagrant.sh`, and result in software instal
 ```
 starcluster put test --user sgeadmin ClusterSoftware /software/ClusterSoftware
 ```
+
+
+## Copy results to an S3 container
+
+Using the [AWS command line tools](https://aws.amazon.com/cli/), start up the cluster and install on the head node.  **Important:** First, the `cluster` user defined on AWS must have Read/Write S3 access.  Visit the [IAM page](https://console.aws.amazon.com/iam/home?region=us-east-1#users/cluster) of the [AWS console](https://console.aws.amazon.com) to grant.  Click on `Attach Policy` and choose `AmazonS3FullAccess`.
+
+```bash
+# Spin it up
+starcluster start lidc
+# Install on head node
+starcluster sshmaster lidc
+pip install awscli
+
+# Back as sgeadmin
+starcluster sshmaster --user sgeadmin lidc
+
+# Configure AWS CLI
+$ sgeadmin@master:~$ aws configure
+AWS Access Key ID [None]: XXXXXXXXXXXXX
+AWS Secret Access Key [None]: YYYYYYYYYYYYYYYYYYYYYYYYY
+Default region name [None]: <Return>
+Default output format [None]: <Return>
+```
+
+**Create the bucket and copy**
+```bash
+aws s3 mb s3://lidc
+
+# Sync segmented
+aws s3 sync segmented s3://lidc/segmented
+
+# Create .tgz of results
+tar fcvz lidc.tgz lidc.db segmented/
+```
+
+

@@ -7,6 +7,7 @@ define help
 Makefile for MDS POC documentat
   setup   - install gitbook, assumes Node / npm are installed
   build   - build the documentation, in documentation/static
+  publish - publish documentation to gh-pages branch for display using GitHub pages
   watch   - watch for documentation changes, serves on http://localhost:4000
   open    - Open the documentation website (http://localhost:4000)
 
@@ -29,7 +30,9 @@ restart:
 	${MAKE} stop
 	${MAKE} watch
 
-publish: gh-pages build
+publish: gh-pages
+	${MAKE} clean
+	${MAKE} build
 	rsync -ar _book/ gh-pages
 	(cd gh-pages && git add . && git commit -m "publish" && git push)
 
