@@ -18,3 +18,6 @@ hugo.pid
 documentation/bower_components
 documentation/public
 *.pid
+sc-env
+analysis/*.csv
+analysis/*.png
