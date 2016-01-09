@@ -26,8 +26,8 @@ include = ~/.starcluster/aws, ~/.starcluster/volumes
 # Sections starting with "key" define your keypairs. See "starcluster createkey
 # --help" for instructions on how to create a new keypair. Section name should
 # match your key name e.g.:
-[key mykey]
-KEY_LOCATION=~/.ssh/mykey.rsa
+[key radiomics-key]
+KEY_LOCATION=~/.ssh/radiomics.rsa
 
 # You can of course have multiple keypair sections
 # [key myotherkey]
@@ -52,7 +52,7 @@ KEY_LOCATION=~/.ssh/mykey.rsa
 
 [cluster smallcluster]
 # change this to the name of one of the keypair sections defined above
-KEYNAME = mykey
+KEYNAME = radiomics-key
 # number of ec2 instances to launch
 CLUSTER_SIZE = 2
 # create the following user on the cluster

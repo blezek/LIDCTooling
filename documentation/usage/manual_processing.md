@@ -106,3 +106,18 @@ Commands:
 
 Load an XML file and convert to NIfTI.
 
+## Setting PATH, etc for local processing
+
+```bash
+make build
+rm -rf segmented/1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824/
+
+LD_LIBRARY_PATH=/Users/blezek/Source/ChestImagingPlatform/build/VTKv6-build/ \
+PATH=/Users/blezek/Source/ChestImagingPlatform/build/CIP-build/bin:$PATH \
+bin/LIDCFetch --verbose gather LIDC-XML-only/tcia-lidc-xml/157/158.xml
+
+LD_LIBRARY_PATH=/Users/blezek/Source/ChestImagingPlatform/build/VTKv6-build/ \
+PATH=/Users/blezek/Source/ChestImagingPlatform/build/CIP-build/bin:$PATH \
+bin/LIDCFetch --verbose evaluate --db test.db segmented/*
+
+```

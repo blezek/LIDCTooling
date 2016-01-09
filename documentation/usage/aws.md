@@ -85,7 +85,7 @@ MOUNT_PATH = /software
 [Creating and formatting](http://star.mit.edu/cluster/docs/latest/manual/volumes.html) an EBS volume is relatively easy:
 
 ```bash
-starcluster createvolume --name=lidc-data --shutdown-volume-host 300 us-east-1a
+starcluster createvolume --name=lidc-data --shutdown-volume-host 200 us-east-1a
 starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1a
 # Confirm creation of volumes
 starcluster listvolumes
@@ -112,7 +112,7 @@ starcluster resizevolume --shutdown-volume-host vol-7340df8e 250
 ### Create a keypair:
 
 ```
-starcluster createkey mykey -o ~/.ssh/mykey.rsa
+starcluster createkey radiomics-key -o ~/.ssh/radiomics.rsa
 ```
 
 And started the cluster:

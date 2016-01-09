@@ -3,13 +3,12 @@ package main
 import (
 	"crypto/sha1"
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/antonholmquist/jason"
 	"github.com/codegangsta/cli"
 	_ "github.com/jmoiron/jsonq"
 	"github.com/mxk/go-sqlite/sqlite3"
+	"os"
+	"path/filepath"
 )
 
 var EvaluateCommand = cli.Command{
@@ -82,6 +81,9 @@ func evaluate(context *cli.Context) {
 
 				// Create the read
 				read_id, _ := read.GetInt64("id")
+
+				logger.Debug("Read %v -- nodule %v", read_id, normalized_nodule_id)
+
 				read_uid := fmt.Sprintf("%v.%v.%v", series_uid, read_id, normalized_nodule_id)
 				Save(db, "reads", read_uid, nodule)
 				characteristics, _ := nodule.GetObject("characteristics")
@@ -89,9 +91,10 @@ func evaluate(context *cli.Context) {
 				db.Exec("update reads set nodule_uid = ? where uid = ?", nodule_uid, read_uid)
 
 				// evaluate segmentation
-				measures := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v_nodule_%v_eval.json", read_id, normalized_nodule_id))
-				if Exists(measures) {
-
+				suffix := fmt.Sprintf("_read_%v_nodule_%v_eval.json", read_id, normalized_nodule_id)
+				files, _ := filepath.Glob(filepath.Join(SegmentedDir, "*"+suffix))
+				for _, measures := range files {
+					logger.Debug("Looking at results file: %v", measures)
 					// Now, read and combine into a SQLite DB
 					fid, _ := os.Open(measures)
 					measure_object, _ := jason.NewObjectFromReader(fid)
@@ -105,7 +108,6 @@ func evaluate(context *cli.Context) {
 					db.Exec("update measures set nodule_uid = ? where uid = ?", nodule_uid, measures_uid)
 					db.Exec("update measures set read_uid = ? where uid = ?", read_uid, measures_uid)
 				}
-
 			}
 		}
 	}
