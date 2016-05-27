@@ -4,6 +4,7 @@
 NPROC=`getconf _NPROCESSORS_ONLN`
 
 ### Install our packages
+sudo apt-get update 
 sudo apt-get install -y cmake curl git subversion clang freeglut3-dev libxml2-dev g++ python-pip python-virtualenv
 # freeglut3-dev brings in OpenGL
 
@@ -34,7 +35,6 @@ if [[ ! -e ChestImagingPlatform  ]]; then
 fi
 mkdir -p ChestImagingPlatform-build
 cd ChestImagingPlatform-build
-git checkout develop
 cmake ../ChestImagingPlatform/
 make -j $NPROC
 make
@@ -45,6 +45,9 @@ branch=$(cd /vagrant && git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -
 if [[ ! -e LIDCTooling ]]; then
    git clone https://github.com/dblezek/LIDCTooling.git
 fi
+
+# rsync --exclude ClusterSoftware -ra /vagrant LIDCTooling 
+
 cd LIDCTooling
 git pull
 git checkout $branch
@@ -55,6 +58,7 @@ make build
 cd
 virtualenv lidc-venv
 source lidc-venv/bin/activate
+pip install -U pip
 easy_install SimpleITK
 
 ### Get LIDC XML files

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 import java.util.logging.Logger;
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.yittlebits.lidc.fill.Fill;
 
 import niftijio.NiftiHeader;
 import niftijio.NiftiVolume;
@@ -187,7 +189,6 @@ public class Segmenter {
       NiftiVolume volume = createVolume();
       ArrayNode nodules = readNode.putArray("nodules");
       ArrayNode smallNodules = readNode.putArray("small_nodules");
-      int labelValue = 1;
 
       // Find all the nodules
       for (Node nodule : toList((NodeList) xpath.evaluate("./unblindedReadNodule", read, XPathConstants.NODESET))) {
@@ -215,6 +216,7 @@ public class Segmenter {
         double cx = 0.0, cy = 0.0, cz = 0.0;
         int pointCount = 0;
         Set<Integer> roiSlices = new HashSet<>();
+        Map<Integer, ArrayList<Point3>> contourMap = new HashMap<>();
         for (Node roi : toList((NodeList) xpath.evaluate("./roi", nodule, XPathConstants.NODESET))) {
           String instanceUID = (String) xpath.evaluate("./imageSOP_UID/text()", roi, XPathConstants.STRING);
           logger.fine("\tROI on slice: " + instanceUID);
@@ -227,6 +229,7 @@ public class Segmenter {
 
           int z = uidToIndex.get(instanceUID);
           roiSlices.add(z);
+          ArrayList<Point3> pointList = new ArrayList<>();
           // Find the Regions
           for (Node point : toList((NodeList) xpath.evaluate("./edgeMap", roi, XPathConstants.NODESET))) {
             double x = (Double) xpath.evaluate("./xCoord/text()", point, XPathConstants.NUMBER);
@@ -234,10 +237,14 @@ public class Segmenter {
             cx += x;
             cy += y;
             cz += z;
+            pointList.add(new Point3((int) x, (int) y, z));
             pointCount++;
 
             // Write to the file
-            volume.data.set((int) x, (int) y, z, 0, labelValue);
+            // volume.data.set((int) x, (int) y, z, 0, labelValue);
+          }
+          if (pointList.size() > 0) {
+            contourMap.put(z, pointList);
           }
         }
         cx = cx / (double) pointCount;
@@ -258,19 +265,15 @@ public class Segmenter {
 
         int normalizeNoduleIdx = normalizer.getNormalizedId(centroidPoint);
 
-        noduleNode.put("point_count", pointCount);
-        noduleNode.put("label_value", labelValue);
-        noduleNode.put("normalized_nodule_id", normalizeNoduleIdx);
-        noduleNode.put("uid", seriesInstanceUID + "-" + readIndex + "." + normalizeNoduleIdx);
-
-        // Fill?
-        if (pointCount > 1) {
-          for (int z : roiSlices) {
-            noduleNode.put("filled", fill(volume, cx, cy, z, labelValue));
-          }
+        // Fill with normalizedNoduleIdx
+        for (Entry<Integer, ArrayList<Point3>> entry : contourMap.entrySet()) {
+          Fill.drawPolygon(volume, entry.getValue().toArray(new Point3[entry.getValue().size()]), normalizeNoduleIdx, entry.getKey());
         }
 
-        labelValue += 1;
+        noduleNode.put("point_count", pointCount);
+        noduleNode.put("label_value", normalizeNoduleIdx);
+        noduleNode.put("normalized_nodule_id", normalizeNoduleIdx);
+        noduleNode.put("uid", seriesInstanceUID + "-" + readIndex + "." + normalizeNoduleIdx);
       }
       logger.fine("Writing Read: " + readIndex);
       volume.write(new File(outputDirectory, filename).getPath());

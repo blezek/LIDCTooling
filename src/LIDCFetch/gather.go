@@ -29,6 +29,11 @@ var GatherCommand = cli.Command{
 			Usage: "Path to LIDCFetch program of LIDCTooling",
 		},
 		cli.StringFlag{
+			Name:  "algorithms",
+			Value: "algorithms",
+			Usage: "Path to directory containing algorithms to run",
+		},
+		cli.StringFlag{
 			Name:  "lesion",
 			Value: "/Users/blezek/Source/ChestImagingPlatform/build/CIP-build/bin/GenerateLesionSegmentation",
 			Usage: "Path to GenerateLesionSegmentation program of Chest Imaging Toolkit",
@@ -149,29 +154,46 @@ func gather(context *cli.Context) {
 			label_value, _ := nodule.GetFloat64("label_value")
 			logger.Debug("Nodule id: %v label: %v centroid: %v", normalized_nodule_id, label_value, centroid)
 
-			// Process the lesion
-			GLS := context.String("lesion")
-
-			input := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v.nii.gz", read_id))
-			image := filepath.Join(SegmentedDir, "image.nii.gz")
-
-			output := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v_nodule_%v.nii.gz", read_id, normalized_nodule_id))
-			seed := fmt.Sprintf("%v,%v,%v", centroid[0], centroid[1], centroid[2])
-			segmentation_cl := []string{GLS, "-i", image, "-o", output, "--seeds", seed, "--fulloutput"}
-
-			if !Exists(output) {
-				out, err := Run(segmentation_cl...)
-				logger.Info("running: %v", segmentation_cl)
-				if err != nil {
-					logger.Error("Error running %v -- %v\nOutput:%v", segmentation_cl, err.Error(), out)
+			// Run the segmentations
+			GroundTruth := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v.nii.gz", read_id))
+			algorithmDir := context.String("algorithms")
+			suffix := fmt.Sprintf("_read_%v_nodule_%v.nii.gz", read_id, normalized_nodule_id)
+			algorithms, _ := ioutil.ReadDir(algorithmDir)
+			for _, f := range algorithms {
+				if !f.IsDir() {
+					cli := []string{
+						filepath.Join(algorithmDir, f.Name()),
+						"--dicom", DownloadDir,
+						"--read", fmt.Sprintf("%v", read_id),
+						"--nodule", fmt.Sprintf("%v", normalized_nodule_id),
+						"--segmentation_path", SegmentedDir,
+						"--ground_truth", GroundTruth,
+						"--label_value", fmt.Sprintf("%v", label_value),
+						"--suffix", suffix,
+						filepath.Join(SegmentedDir, "image.nii.gz"),
+						fmt.Sprintf("%v", centroid[0]),
+						fmt.Sprintf("%v", centroid[1]),
+						fmt.Sprintf("%v", centroid[2]),
+						SegmentedDir,
+					}
+					out, err := Run(cli...)
+					logger.Info("running: %v", cli)
+					logger.Info("output: %v", out)
+					if err != nil {
+						logger.Error("Error running %v -- %v\nOutput:%v", cli, err.Error(), out)
+					}
 				}
 			}
 
-			// evaluate segmentation
-			measures := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v_nodule_%v_eval.json", read_id, normalized_nodule_id))
-			if !Exists(measures) {
-				command_line := strings.Trim(fmt.Sprintf("%v", segmentation_cl), "[]")
-				args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", command_line, output, input, measures}
+			// Evaluate all the segmentations matching the suffix
+			segmentations, _ := filepath.Glob(filepath.Join(SegmentedDir, "*"+suffix))
+			for _, match := range segmentations {
+				segmentation := filepath.Base(match)
+				tag := strings.Split(segmentation, suffix)[0]
+				// Process...
+				measures := filepath.Join(SegmentedDir, tag+suffix)
+
+				args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", tag, match, GroundTruth, measures}
 				logger.Info("Running: %v", args)
 				out, err := Run(args...)
 				if err != nil {

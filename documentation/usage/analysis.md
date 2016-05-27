@@ -53,7 +53,7 @@ sqlite3 -header -csv test.db "select * from nodules"
 
 ```bash
 # spiculation_vs_hausdorff_distance.sql
-select nodules.normalized_nodule_id, series.series_instance_uid, reads.spiculation, measures.average_hausdorff_distance, measures.command_line
+select nodules.normalized_nodule_id, series.series_instance_uid, reads.*, measures.*
 
 from
   nodules, series, reads, measures
@@ -62,9 +62,10 @@ where
   nodules.series_uid = series.uid
   and nodules.normalized_nodule_id = reads.normalized_nodule_id
   and reads.uid = measures.read_uid
+  and measures.nodule_uid = nodules.uid
 
 order by
-  series.series_instance_uid, nodules.normalized_nodule_id
+  series.series_instance_uid, nodules.normalized_nodule_id;
 
 sqlite3 -header -csv test.db ".read spiculation_vs_hausdorff_distance.sql" > spiculation_vs_hausdorff_distance.csv
 ```
@@ -86,8 +87,17 @@ Rscript spiculation_vs_hausdorff_distance.R
 ```
 
 
+## R explorations
 
+```R
+# Read in the CVS data
+d <- read.csv("spiculation_vs_hausdorff_distance.csv")
+# A spineplot gives the relative frequencies of each factor
+spineplot(factor(margin)~factor(malignancy), data=d)
 
+# Box plot of average_hausdorff_distance vs X
+plot ( aggregate(average_hausdorff_distance~spiculation, d, mean ) )
+```
 
 
 ## Table details

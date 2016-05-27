@@ -22,17 +22,13 @@ Spot instances are a great value, a `c4.large` has 2 vCPU and 3.75G memory and t
 pip install --user virtualenv
 
 # Create the virtualenv in the local directory
-virtualenv venv
+virtualenv sc-env
 
 # Activate the local virtualenv
-source venv/bin/activate
+source sc-env/bin/activate
 
 # Install StarCluster in the virtualenv
 easy_install StarCluster
-
-# Install plotting software, didn't work
-# easy_install matplotlib
-# easy_install numpy
 ```
 
 Cool! Now StarCluster is installed and we can do interesting things with it.
@@ -45,19 +41,14 @@ Setup the configuration:
 starcluster help
 ```
 
-Select `2` to write the config file.  The edit according to the [Quick Start guide](http://star.mit.edu/cluster/docs/latest/quickstart.html).  Using a 2 node cluster of `t2.micro` instances to work with the AMI instance and conform to the AWS free tier.
+Select `2` to write the config file, or use the config file `devops/config` included in the project.  Then edit according to the [Quick Start guide](http://star.mit.edu/cluster/docs/latest/quickstart.html).  Using a 2 node cluster of `t2.micro` instances to work with the AMI instance and conform to the AWS free tier.
 
 Using a non-root account called `cluster`.  Created a group called `starcluster` and gave it EC2 and IAM access.
 
 ### Specific configuration changes
 
 ```
-[aws info]
-AWS_ACCESS_KEY_ID = ************* #your_aws_access_key_id
-AWS_SECRET_ACCESS_KEY =  ***************** #your_secret_access_key
-# replace this with your account number
-AWS_USER_ID= ********* #your userid
-
+# see devops/config for more details
 [cluster smallcluster]
 CLUSTER_SIZE = 2
 NODE_IMAGE = ami-3393a45a
@@ -66,7 +57,19 @@ NODE_INSTANCE_TYPE = t1.micro
 
 # Use the volume
 VOLUMES = data,software
+```
 
+```
+# Sould be saved in ~/.starcluster/aws
+[aws info]
+AWS_ACCESS_KEY_ID = ************* #your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY =  ***************** #your_secret_access_key
+# replace this with your account number
+AWS_USER_ID= ********* #your userid
+```
+
+```
+# Should be saved in ~/.starcluster/volumes
 # Create an EBS volumes
 [volume data]
 VOLUME_ID = vol-*****
@@ -82,8 +85,10 @@ MOUNT_PATH = /software
 [Creating and formatting](http://star.mit.edu/cluster/docs/latest/manual/volumes.html) an EBS volume is relatively easy:
 
 ```bash
-starcluster createvolume --name=lidc-data --shutdown-volume-host 300 us-east-1a
+starcluster createvolume --name=lidc-data --shutdown-volume-host 200 us-east-1a
 starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1a
+# Confirm creation of volumes
+starcluster listvolumes
 ```
 
 Creates a `10 GB` volume named `lidc-data` in the `us-east-1a` zone, shutting down the creation host afterward.  This command may also bid on a spot instance for $0.10 with the `--bid 0.10` flag.  The bid is not necessary for a `t1.micro` instance, because it cost $0.05 / hr.
@@ -107,7 +112,7 @@ starcluster resizevolume --shutdown-volume-host vol-7340df8e 250
 ### Create a keypair:
 
 ```
-starcluster createkey mykey -o ~/.ssh/mykey.rsa
+starcluster createkey radiomics-key -o ~/.ssh/radiomics.rsa
 ```
 
 And started the cluster:
