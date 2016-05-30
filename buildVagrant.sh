@@ -30,6 +30,7 @@ fi
 
 
 ### Chest Imaging Platform
+cd $HOME
 if [[ ! -e ChestImagingPlatform  ]]; then
    git clone https://github.com/acil-bwh/ChestImagingPlatform.git
 fi
@@ -59,7 +60,7 @@ cd
 virtualenv lidc-venv
 source lidc-venv/bin/activate
 pip install -U pip
-easy_install SimpleITK
+easy_install -f http://www.simpleitk.org/SimpleITK/resources/software.html SimpleITK
 
 ### Get LIDC XML files
 cd
