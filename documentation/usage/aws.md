@@ -15,23 +15,23 @@ Spot instances are a great value, a `c4.large` has 2 vCPU and 3.75G memory and t
 
 ## Install StarCluster locally
 
-[StarCluster](http://star.mit.edu/cluster/docs/latest/index.html) is a project to make mananging a OpenGridEngine cluster on AWS easy.
+[StarCluster](http://star.mit.edu/cluster/docs/latest/index.html) is a project to make managing a OpenGridEngine cluster on AWS easy.
 
 ```bash
 # Install Python's virtualenv support
 pip install --user virtualenv
 
 # Create the virtualenv in the local directory
-virtualenv sc-env
+virtualenv venv
 
 # Activate the local virtualenv
-source sc-env/bin/activate
+source venv/bin/activate
 
 # Install StarCluster in the virtualenv
 easy_install StarCluster
 ```
 
-Cool! Now StarCluster is installed and we can do interesting things with it.
+Now StarCluster is installed and we can do interesting things with it.
 
 ## Configure
 
@@ -91,7 +91,7 @@ starcluster createvolume --name=lidc-software --shutdown-volume-host 8 us-east-1
 starcluster listvolumes
 ```
 
-Creates a `10 GB` volume named `lidc-data` in the `us-east-1a` zone, shutting down the creation host afterward.  This command may also bid on a spot instance for $0.10 with the `--bid 0.10` flag.  The bid is not necessary for a `t1.micro` instance, because it cost $0.05 / hr.
+Creates a `200 GB` volume named `lidc-data` in the `us-east-1a` zone, shutting down the creation host afterward.  This command may also bid on a spot instance for $0.10 with the `--bid 0.10` flag.  The bid is not necessary for a `t1.micro` instance, because it cost $0.05 / hr.
 
 ### Resize a volume
 
@@ -106,10 +106,9 @@ starcluster resizevolume --shutdown-volume-host vol-##### 20
 
 This resizes the volume `vol-#####` to 20 Gb and will shutdown the volume host when the command completes.
 
-starcluster resizevolume --shutdown-volume-host vol-7340df8e 250
-
-
 ### Create a keypair:
+
+A keypair is an SSH key installed on the cluster at boot, enabling easy root and sgemaster access.
 
 ```
 starcluster createkey radiomics-key -o ~/.ssh/radiomics.rsa
@@ -139,7 +138,7 @@ starcluster sshmaster -u sgeadmin test
 
 ```
 starcluster sshmaster -u sgeadmin test
-cat > sleep.pbs <<EOF
+cat > sleep.sh <<EOF
 #!/bin/sh
  
 for i in {1..60} ; do
@@ -148,11 +147,11 @@ for i in {1..60} ; do
 done
 EOF
 
-chmod 755 sleep.pbs
+chmod 755 sleep.sh
 
 # submit
 for i in {1..5} ; do
-  qsub -o sleep.\$JOB_ID.log -j yes sleep.pbs
+  qsub -o sleep.\$JOB_ID.log -j yes sleep.sh
 done
 
 # watch
@@ -188,7 +187,7 @@ Build instructions are found in `buildVagrant.sh`, and result in software instal
 ## Copy software to StarCluster
 
 ```
-starcluster put test --user sgeadmin ClusterSoftware /software/ClusterSoftware
+devops/cluster-install.sh lidc
 ```
 
 

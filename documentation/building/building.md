@@ -15,12 +15,11 @@ make # wait for it...
 
 ## LIDCFetch
 
-`LIDCFetch` interacts with the LIDC website to fetch DICOM images.
+`LIDCFetch` interacts with the LIDC website to fetch DICOM images.  `LIDCFetch` is built using the [Go programming language](https://golang.org/).
 
 ```
 git clone git@github.com:dblezek/LIDCTooling.git
 cd LIDCTooling
-# Build GO
 make build
 ```
 
