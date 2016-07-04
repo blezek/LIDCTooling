@@ -1,74 +1,64 @@
-#!/bin/sh
-
-# Options are:
-# -d path      -- path to dicom directory
-# -r read      -- read number
-# -n nodule    -- nodule number
-# -s path      -- path to segmentation directory
-# -g path      -- path to ground truth NIfTI
-# -l label     -- label_value of ground truth voxel
-# -x suffix    -- suffix of output volumes, i.e. _read_1_nodule_2.nii.gz
-
-# Arguments are:
-# input_image  -- NIfTI volume
-# cx cy cz     -- centroid x,y,z in image coordinates
-# output_path  -- path where NIfTI volumes should be written in the form
-
-dicom_path=""
-read_number=""
-nodule_number=""
-segmentation_path=""
-ground_truth=""
-label_value=""
-suffix=""
-
-while :
-do
-    case "$1" in
-        -d | --dicom)
-            dicom_path="$2"
-            shift 2
-            ;;
-        -r | --read)
-            read_number="$2"
-            shift 2
-            ;;
-        -n | --nodule)
-            nodule_number="$2"
-            shift 2
-            ;;
-        -s | --segmentation_path)
-            segmentation_path="$2"
-            shift 2
-            ;;
-        -g | --ground_truth)
-            ground_truth="$2"
-            shift 2
-            ;;
-        -l | --label_value)
-            label_value="$2"
-            shift 2
-            ;;
-        -x | --suffix)
-            suffix="$2"
-            shift 2
-            ;;
-        --)
-            shift
-            break;
-            ;;
-        *) # no more options
-            break
-            ;;
-    esac
-done
-
-input_image=$1
-cx=$2
-cy=$3
-cz=$4
-output_path=$5
+#!/usr/bin/env python
+# Evaluate lung nodule segmentation
 
 # Execute your algorithm and save to $output_path/tag$suffix
-python staple.py --label $label_value --ignore `basename $ground_truth` --output $output_path/STAPLE$suffix $segmentation_path/read*.nii.gz
+# /software/python/staple --label $label_value --ignore `basename $ground_truth` --output $output_path $segmentation_path/read*.nii.gz
+
+
+usage = """
+Usage:
+ staple.py [options] input0 [input1, ..., inputN]
+ options:
+    --label <value>          -- label of nodule
+    --output <filename>      -- output filename
+    --dicom path             -- path to dicom directory
+    --read read              -- read number
+    --nodule nodule          -- nodule number
+    --segmentation_path path -- path to segmentation directory
+    --ground_truth path      -- path to ground truth NIfTI
+    --label label            -- label_value of ground truth voxel
+"""
+
+import getopt
+import SimpleITK as sitk
+import sys,os,json
+import glob,os.path
+
+
+# Parse 
+opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label_value=","dicom=","read=","nodule=","segmentation_path=","ground_truth=","output="])
+
+if len(args) < 1:
+    print usage
+    sys.exit(1)
+
+output_filename = args[4]
+settings = { "--label_value": '1', '--output': '', '--ground_truth': '', '--segmentation_path': ''}
+settings.update ( opts )
+
+ignore = os.path.basename(settings["--ground_truth"])
+g = settings['--segmentation_path'] + "/read*.nii.gz"
+print ( "looking for " + g )
+reads = glob.glob(g)
+# Load the input images
+inputs = []
+for f in reads:
+    if f.find(ignore) != -1:
+       continue
+    print("Loading " + f)
+    inputs.append ( sitk.ReadImage(f) )
+    
+staple = sitk.STAPLEImageFilter()
+staple.SetForegroundValue ( float(settings["--label_value"]) )
+staple_output = staple.Execute ( *inputs )
+
+threshold = sitk.BinaryThresholdImageFilter()
+threshold.SetLowerThreshold(0.9)
+threshold.SetUpperThreshold(10e5)
+threshold.SetInsideValue(int(settings["--label_value"]))
+output = threshold.Execute(staple_output)
+
+print ( "writing " + output_filename)
+
+sitk.WriteImage(output, output_filename, True)
 
