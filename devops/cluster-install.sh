@@ -8,5 +8,7 @@ MASTER=$(echo "${cluster_meta}" | grep "master running" | awk '{print $4}')
 
 ssh-add  ~/.ssh/mykey.rsa
 ssh-add  ~/.ssh/radiomics.rsa
-rsync -arv --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
+rsync -arv algorithms ClusterSoftware/
+rsync -arv --delete --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
 rsync -arv devops/*.sh sgeadmin@$MASTER:
+
