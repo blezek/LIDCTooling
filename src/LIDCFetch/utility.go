@@ -3,7 +3,16 @@ package main
 import (
 	"net/http"
 	"net/url"
+	"strings"
 )
+
+func basename(s string) string {
+	n := strings.LastIndexByte(s, '.')
+	if n > 0 {
+		return s[:n]
+	}
+	return s
+}
 
 // Prepare the request by adding the api_key header
 func prepareRequest(endpoint string, inParams url.Values) (*http.Request, error) {

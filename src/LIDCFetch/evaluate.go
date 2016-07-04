@@ -91,7 +91,8 @@ func evaluate(context *cli.Context) {
 				db.Exec("update reads set nodule_uid = ? where uid = ?", nodule_uid, read_uid)
 
 				// evaluate segmentation
-				suffix := fmt.Sprintf("_read_%v_nodule_%v_eval.json", read_id, normalized_nodule_id)
+				suffix := fmt.Sprintf("_read_%v_nodule_%v.json", read_id, normalized_nodule_id)
+				logger.Debug("Suffix is: %v", suffix)
 				files, _ := filepath.Glob(filepath.Join(SegmentedDir, "*"+suffix))
 				for _, measures := range files {
 					logger.Debug("Looking at results file: %v", measures)

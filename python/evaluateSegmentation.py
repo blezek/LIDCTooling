@@ -21,7 +21,7 @@ if len(args) < 3:
     print usage
     sys.exit(1)
 
-settings = { "--threshold": '-0.5', "--label": '1'}
+settings = { "--threshold": '1.0', "--label": '1'}
 settings.update ( opts )
 
 # Load the input image
@@ -29,7 +29,7 @@ segmentation = sitk.ReadImage ( args[0] )
 gold_standard = sitk.ReadImage ( args[1] )
 jsonOutput = args[2]
 
-segmentation = sitk.BinaryThreshold(segmentation, lowerThreshold=float(settings["--threshold"]), upperThreshold=10e10)
+segmentation = sitk.BinaryThreshold(segmentation, lowerThreshold=1.0, upperThreshold=1000)
 label = float(settings['--label'])
 gold_standard = sitk.BinaryThreshold(gold_standard, lowerThreshold=label, upperThreshold=label)
 

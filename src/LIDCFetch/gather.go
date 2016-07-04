@@ -157,24 +157,26 @@ func gather(context *cli.Context) {
 			// Run the segmentations
 			GroundTruth := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v.nii.gz", read_id))
 			algorithmDir := context.String("algorithms")
-			suffix := fmt.Sprintf("_read_%v_nodule_%v.nii.gz", read_id, normalized_nodule_id)
+			tag := fmt.Sprintf("_read_%v_nodule_%v", read_id, normalized_nodule_id)
+			suffix := tag + ".nii.gz"
 			algorithms, _ := ioutil.ReadDir(algorithmDir)
 			for _, f := range algorithms {
 				if !f.IsDir() {
+					algorithm := f.Name()
+					outputSegmentation := filepath.Join(SegmentedDir, algorithm+suffix)
 					cli := []string{
-						filepath.Join(algorithmDir, f.Name()),
+						filepath.Join(algorithmDir, algorithm),
 						"--dicom", DownloadDir,
 						"--read", fmt.Sprintf("%v", read_id),
 						"--nodule", fmt.Sprintf("%v", normalized_nodule_id),
 						"--segmentation_path", SegmentedDir,
 						"--ground_truth", GroundTruth,
 						"--label_value", fmt.Sprintf("%v", label_value),
-						"--suffix", suffix,
 						filepath.Join(SegmentedDir, "image.nii.gz"),
 						fmt.Sprintf("%v", centroid[0]),
 						fmt.Sprintf("%v", centroid[1]),
 						fmt.Sprintf("%v", centroid[2]),
-						SegmentedDir,
+						outputSegmentation,
 					}
 					out, err := Run(cli...)
 					logger.Info("running: %v", cli)
@@ -182,24 +184,38 @@ func gather(context *cli.Context) {
 					if err != nil {
 						logger.Error("Error running %v -- %v\nOutput:%v", cli, err.Error(), out)
 					}
+
+					cliString := strings.Join(cli, " ")
+					measures := filepath.Join(SegmentedDir, algorithm+tag+".json")
+					logger.Info("Tag: %v Suffix: %v Measures: %v", tag, suffix, measures)
+					args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", cliString, outputSegmentation, GroundTruth, measures}
+					logger.Info("Running evaluation: %v", args)
+					out, err = Run(args...)
+					if err != nil {
+						logger.Error("Error running %v: %v", args, out)
+					}
+
 				}
 			}
 
-			// Evaluate all the segmentations matching the suffix
-			segmentations, _ := filepath.Glob(filepath.Join(SegmentedDir, "*"+suffix))
-			for _, match := range segmentations {
-				segmentation := filepath.Base(match)
-				tag := strings.Split(segmentation, suffix)[0]
-				// Process...
-				measures := filepath.Join(SegmentedDir, tag+suffix)
+			// 	// Evaluate all the segmentations matching the suffix
+			// 	segmentations, _ := filepath.Glob(filepath.Join(SegmentedDir, "*"+suffix))
+			// 	for _, match := range segmentations {
+			// 		segmentation := filepath.Base(match)
+			// 		tag := strings.Split(segmentation, suffix)[0]
+			// 		// Process...
+			// 		base := basename(basename(suffix))
+			// 		measures := filepath.Join(SegmentedDir, tag+base+".json")
 
-				args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", tag, match, GroundTruth, measures}
-				logger.Info("Running: %v", args)
-				out, err := Run(args...)
-				if err != nil {
-					logger.Error("Error running %v: %v", args, out)
-				}
-			}
+			// 		logger.Info("Tag: %v Suffix: %v Measures: %v", tag, suffix, measures)
+
+			// 		args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", tag, match, GroundTruth, measures}
+			// 		logger.Info("Running: %v", args)
+			// 		out, err := Run(args...)
+			// 		if err != nil {
+			// 			logger.Error("Error running %v: %v", args, out)
+			// 		}
+			// 	}
 		}
 	}
 

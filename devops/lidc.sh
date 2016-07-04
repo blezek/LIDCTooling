@@ -23,8 +23,10 @@
 cd /home/sgeadmin/
 
 export JAVA_HOME=/software/jvm/jdk1.8.0_20
-export PATH=$PATH:$JAVA_HOME/bin:/software/bin
+export PATH=$PATH:$JAVA_HOME/bin:/software/bin:/software/python
 export LD_LIBRARY_PATH=/software/lib
+
+which staple
 
 # Give Java some room to work
 export JAVA_OPTS="-Xmx2g"
@@ -46,6 +48,7 @@ LESION=GenerateLesionSegmentation
 EXTRACT=Extract
 FETCH=LIDCFetch
 EVALUATE=/software/python/evaluateSegmentation.py
+ALGORITHMS=/software/algorithms
 
 # Local locations
 DICOM=/tmp/dicom/$JOBID
@@ -63,6 +66,7 @@ if [ ! -e /home/sgeadmin/segmented/$SeriesInstanceUID ]; then
               --evaluate $EVALUATE \
               --dicom $DICOM \
               --segmented $SEGMENTED \
+              --algorithms $ALGORITHMS \
               --clean-dicom \
               /software/$XML
 
@@ -73,5 +77,5 @@ if [ ! -e /home/sgeadmin/segmented/$SeriesInstanceUID ]; then
     rm -rf $DICOM
 
 else
-    echo "Already processed $XML -- early exit"
+    echo "Already processed $XML -- early exit because /home/sgeadmin/segmented/$SeriesInstanceUID exists"
 fi
