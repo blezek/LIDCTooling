@@ -126,7 +126,7 @@ VOLUMES = data, software
 # settings from <cluster_name> as defaults. Below are example templates that
 # use the EXTENDS feature:
 
-[cluster lidccluster]
+[cluster lidc]
 EXTENDS=smallcluster
 # NODE_INSTANCE_TYPE=c3.xlarge
 # Last generation, 8 cores 7G, spot price ~ $0.04
@@ -136,7 +136,7 @@ EXTENDS=smallcluster
 # 4 cores, 15G
 NODE_INSTANCE_TYPE=c3.xlarge
 CLUSTER_SiZE=10
-SPOT_BID=0.06
+SPOT_BID=0.25
 FORCE_SPOT_MASTER=false
 
 [cluster io]
