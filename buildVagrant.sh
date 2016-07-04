@@ -32,13 +32,17 @@ fi
 ### Chest Imaging Platform
 cd $HOME
 if [[ ! -e ChestImagingPlatform  ]]; then
-   git clone https://github.com/acil-bwh/ChestImagingPlatform.git
+    git clone https://github.com/acil-bwh/ChestImagingPlatform.git
+    (cd ChestImagingPlatform && git checkout develop)
 fi
-mkdir -p ChestImagingPlatform-build
-cd ChestImagingPlatform-build
-cmake ../ChestImagingPlatform/
-make -j $NPROC
-make
+### Don't rebuild if we don't have to...
+if [[ ! -e ChestImagingPlatform-build/CIP-build/bin/GenerateLesionSegmentation ]]; then
+    mkdir -p ChestImagingPlatform-build
+    cd ChestImagingPlatform-build
+    cmake ../ChestImagingPlatform/
+    make -j $NPROC
+    make
+fi
 
 ### Build the LIDC code
 cd
@@ -47,13 +51,14 @@ if [[ ! -e LIDCTooling ]]; then
    git clone https://github.com/dblezek/LIDCTooling.git
 fi
 
-# rsync --exclude ClusterSoftware -ra /vagrant LIDCTooling 
+# rsync --exclude ClusterSoftware --exclude segmented --exclude dicom -ra /vagrant LIDCTooling 
 
 cd LIDCTooling
 git pull
 git checkout $branch
 make build
 ./gradlew installDist
+
 
 ### Build the python virtual environment
 cd
@@ -69,6 +74,7 @@ tar fxz LIDC_XML-only.tar.gz
 
 ### Copy to host
 cd
+rm -rf /vagrant/ClusterSoftware/
 mkdir -p /vagrant/ClusterSoftware/{bin,lib}
 rsync LIDCTooling/bin/* /vagrant/ClusterSoftware/bin
 rsync -ra LIDCTooling/build/install/LIDCTooling/bin/ /vagrant/ClusterSoftware/bin/
@@ -83,6 +89,7 @@ rsync -ra ChestImagingPlatform-build/CIP-build/bin/ /vagrant/ClusterSoftware/bin
 # Python
 rsync -ra lidc-venv /vagrant/ClusterSoftware
 rsync -ra LIDCTooling/python /vagrant/ClusterSoftware/
+rsync -ra LIDCTooling/algorithms /vagrant/ClusterSoftware/
 sed -i.bak  s^/home/vagrant^/software^g /vagrant/ClusterSoftware/lidc-venv/bin/activate
 
 # Java
