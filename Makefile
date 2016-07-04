@@ -13,10 +13,16 @@ Makefile for LIDCFetch
   vet     - look for trouble in the code...
   segment - Grab some files and segment
 
-Cluster (make CLUSTER=test)
+Cluster (make CLUSTER=test TEMPLATE=smallcluster)
   cluster-start      - start up starcluster
-  cluster-terminate  - terminate (destroy) starcluster
   cluster-install    - copy ClusterSoftware to /software
+  cluster-ssh        - ssh (as sgemaster) to cluster
+  cluster-terminate  - terminate (destroy) starcluster
+
+Cluster Templates
+  smallcluster    - testing, 2 micro nodes
+  lidc            - production, 10 c3.xlarge spot instances
+  io              - 1 c3.large for install / data movement
 
 Example:
 make build
@@ -45,13 +51,24 @@ build: bin/LIDCFetch
 bin/LIDCFetch: deps
 	go install -ldflags "-X main.Version=${VERSION}" LIDCFetch
 
-dicom: build
-	bin/LIDCFetch fetch image --extract dicom/ 1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824
+evaluate: bin/LIDCFetch
+	rm run_test.db
+	bin/LIDCFetch --verbose evaluate --db run_test.db segmented/*
 
-segment: dicom
-	mkdir -p dicom-segmented
-	./gradlew jar
-	(cd build/libs && java -jar LIDCTooling.jar segment ${DIR}/LIDC-XML-only/tcia-lidc-xml/157/158.xml ${DIR}/dicom ${DIR}/dicom-segmented)
+run: build bin/LIDCFetch
+	rm -rf segmented/1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824/
+	env PATH=../ChestImagingPlatform/build/CIP-build/bin/:python/:${PATH} \
+	bin/LIDCFetch --verbose \
+              gather \
+              --extract build/install/LIDCTooling/bin/Extract \
+              --fetch bin/LIDCFetch \
+              --lesion ../ChestImagingPlatform/build/CIP-build/bin/GenerateLesionSegmentation \
+              --evaluate python/evaluateSegmentation.py \
+              --dicom dicom/ \
+              --segmented segmented/ \
+              ClusterSoftware/tcia-lidc-xml/157/158.xml
+
+
 
 test: build
 	go test LIDCFetch/...
