@@ -12,6 +12,7 @@ Usage:
 import getopt
 import SimpleITK as sitk
 import sys,os,json
+import math
 
 
 # Parse 
@@ -37,15 +38,18 @@ gold_standard = sitk.BinaryThreshold(gold_standard, lowerThreshold=label, upperT
 ruler = sitk.LabelOverlapMeasuresImageFilter()
 overlap = ruler.Execute(segmentation,gold_standard)
 
-# Compute Hausdorff distance
+# Compute Hausdorff distance, this may fail if the segmentation failed
 hd = sitk.HausdorffDistanceImageFilter()
-hd.Execute(segmentation,gold_standard)
+try:
+    hd.Execute(segmentation,gold_standard)
+except:
+    pass
 
 measures = {
     "command_line": settings["--cli"],
     "measures" : {
         "false_negative_error": ruler.GetFalseNegativeError(),
-        "false_positive_error": ruler.GetFalsePositiveError(),
+        "false_positive_error": 1.0 if math.isnan(ruler.GetFalsePositiveError()) else ruler.GetFalsePositiveError(),
         "mean_overlap": ruler.GetMeanOverlap(),
         "union_overlap": ruler.GetUnionOverlap(),
         "volume_similarity": ruler.GetVolumeSimilarity(),
