@@ -59,7 +59,7 @@ SeriesInstanceUID=`$EXTRACT SeriesInstanceUID /software/$XML`
 if [ ! -e /home/sgeadmin/segmented/$SeriesInstanceUID ]; then
 
     LIDCFetch --verbose \
-              gather \
+              process \
               --extract $EXTRACT \
               --fetch $FETCH \
               --lesion $LESION \

@@ -62,10 +62,16 @@ make build
 
 ### Build the python virtual environment
 cd
+if [[ ! -e pyradiomics ]]; then
+    git clone git@github.com:blezek/pyradiomics.git
+fi
 virtualenv lidc-venv
 source lidc-venv/bin/activate
-pip install -U pip
+(cd pyradiomics && python setup.py install)
+# pip install -U pip
 easy_install -f http://www.simpleitk.org/SimpleITK/resources/software.html SimpleITK
+pip install PyWavelets
+pip install tqdm
 
 ### Get LIDC XML files
 cd
