@@ -24,6 +24,10 @@ func main() {
 			Name:  "verbose",
 			Usage: "verbose logging",
 		},
+		cli.BoolFlag{
+			Name:  "silent",
+			Usage: "no logging, overrides --verbose",
+		},
 		cli.StringFlag{
 			Name:  "format",
 			Value: "json",
@@ -39,9 +43,9 @@ func main() {
 			Value: baseURL,
 		},
 	}
-	app.Commands = []cli.Command{QueryCommand, FetchCommand, GatherCommand, EvaluateCommand}
+	app.Commands = []cli.Command{QueryCommand, FetchCommand, ProcessCommand, EvaluateCommand}
 	app.Before = func(context *cli.Context) error {
-		configureLogging(context.Bool("verbose"))
+		configureLogging(context)
 		if context.String("apikey") != "" {
 			APIKey = context.String("apikey")
 		}
@@ -51,15 +55,18 @@ func main() {
 	app.Run(os.Args)
 }
 
-func configureLogging(verbose bool) {
+func configureLogging(context *cli.Context) {
 	backend := log.NewLogBackend(os.Stdout, "", 0)
 	f := "%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x} %{message}"
 	//	f = "%{time:15:04:05.000} %{module} ▶ %{level:.5s} %{id:03x} %{message}"
 	format := log.MustStringFormatter(f)
 	formatter := log.NewBackendFormatter(backend, format)
 	log.SetBackend(formatter)
-	log.SetLevel(log.ERROR, "lidc")
-	if verbose {
+	log.SetLevel(log.INFO, "lidc")
+	if context.Bool("verbose") {
 		log.SetLevel(log.DEBUG, "lidc")
+	}
+	if context.Bool("silent") {
+		log.SetLevel(log.ERROR, "lidc")
 	}
 }

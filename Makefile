@@ -2,7 +2,7 @@ export GOPATH:=$(shell pwd)
 # Build version
 VERSION:=$(shell git describe --always)-$(shell date +%F-%H-%M)
 DIR:=$(shell pwd)
-CLUSTER ?= test
+CLUSTER ?= lidc
 TEMPLATE ?= smallcluster
 
 define help
@@ -58,17 +58,18 @@ evaluate: bin/LIDCFetch
 run: build bin/LIDCFetch
 	rm -rf segmented/1.3.6.1.4.1.14519.5.2.1.6279.6001.303494235102183795724852353824/
 	env PATH=../ChestImagingPlatform/build/CIP-build/bin/:python/:${PATH} \
-	bin/LIDCFetch --verbose \
-              gather \
+	bin/LIDCFetch \
+              process \
               --extract build/install/LIDCTooling/bin/Extract \
               --fetch bin/LIDCFetch \
-              --lesion ../ChestImagingPlatform/build/CIP-build/bin/GenerateLesionSegmentation \
               --evaluate python/evaluateSegmentation.py \
               --dicom dicom/ \
               --segmented segmented/ \
               ClusterSoftware/tcia-lidc-xml/157/158.xml
-
-
+	bin/LIDCFetch \
+	      evaluate \
+	      --db test_run.db \
+              segmented/*
 
 test: build
 	go test LIDCFetch/...

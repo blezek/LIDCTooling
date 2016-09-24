@@ -55,7 +55,7 @@ func evaluate(context *cli.Context) {
 			continue
 		}
 
-		logger.Debug("Processing (%v/%v) %v", idx+1, len(context.Args()), ReportFile)
+		logger.Info("Processing (%v/%v) %v", idx+1, len(context.Args()), ReportFile)
 		// Now parse the JSON
 		JsonFile := filepath.Join(SegmentedDir, "reads.json")
 		fid, err := os.Open(JsonFile)
@@ -95,7 +95,7 @@ func evaluate(context *cli.Context) {
 				logger.Debug("Suffix is: %v", suffix)
 				files, _ := filepath.Glob(filepath.Join(SegmentedDir, "*"+suffix))
 				for _, measures := range files {
-					logger.Debug("Looking at results file: %v", measures)
+					logger.Debug("Processing results file: %v", measures)
 					// Now, read and combine into a SQLite DB
 					fid, _ := os.Open(measures)
 					measure_object, _ := jason.NewObjectFromReader(fid)
