@@ -7,7 +7,7 @@
 
 usage = """
 Usage:
- staple.py [options] input0 [input1, ..., inputN]
+ staple.py [options] input cx cy cz output
  options:
     --label <value>          -- label of nodule
     --output <filename>      -- output filename
@@ -17,6 +17,11 @@ Usage:
     --segmentation_path path -- path to segmentation directory
     --ground_truth path      -- path to ground truth NIfTI
     --label label            -- label_value of ground truth voxel
+
+ args:
+    input -- input volume
+    cx cy cz -- seed point
+    output  -- output volume
 """
 
 import getopt
@@ -32,9 +37,13 @@ if len(args) < 1:
     print usage
     sys.exit(1)
 
-output_filename = args[4]
 settings = { "--label_value": '1', '--output': '', '--ground_truth': '', '--segmentation_path': ''}
 settings.update ( opts )
+output_filename = args[4]
+if output_filename == None:
+    print ( 'Output filename must be set')
+    print usage
+    sys.exit(1)
 
 ignore = os.path.basename(settings["--ground_truth"])
 g = settings['--segmentation_path'] + "/read*.nii.gz"
