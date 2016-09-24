@@ -61,4 +61,8 @@ tasks.withType(Tar){
 
 // jar.dependsOn collectJars
 
+task wrapper(type: Wrapper) {
+  gradleVersion = '3.0'
+}
+
 //-*- mode: groovy -*-
