@@ -115,13 +115,13 @@ func process(context *cli.Context) {
 		logger.Fatalf("Could not determine SeriesInstanceUID.  Command is %v", args)
 	}
 
-	logger.Info("Processing %v - %v", xml, SeriesInstanceUID)
+	logger.Infof("Processing %v - %v", xml, SeriesInstanceUID)
 
 	// Check the segmented directory
 	SegmentedDir := filepath.Join(context.String("segmented"), SeriesInstanceUID)
 	ReportFile := filepath.Join(SegmentedDir, "reads.json")
 	if Exists(ReportFile) {
-		logger.Debug("reads file exists, continuing (%v)", ReportFile)
+		logger.Debugf("reads file exists, continuing (%v)", ReportFile)
 		return
 	}
 	BaseImage := filepath.Join(SegmentedDir, "image.nii.gz")
@@ -130,15 +130,15 @@ func process(context *cli.Context) {
 	DownloadDir := filepath.Join(context.String("dicom"), SeriesInstanceUID)
 	if !Exists(DownloadDir) {
 		os.MkdirAll(DownloadDir, os.ModePerm|os.ModeDir)
-		logger.Debug("will be downloading to %v", DownloadDir)
+		logger.Debugf("will be downloading to %v", DownloadDir)
 		args = []string{context.String("fetch"), "fetch", "image", "--extract", DownloadDir, SeriesInstanceUID}
 		out, err := Run(args...)
 		if err != nil {
-			logger.Error("error running %v: %v", args, out)
+			logger.Errorf("error running %v: %v", args, out)
 		}
-		logger.Debug("Fetch: %v %v", args, out)
+		logger.Debugf("Fetch: %v %v", args, out)
 	} else {
-		logger.Info("DICOM exists in %v", DownloadDir)
+		logger.Infof("DICOM exists in %v", DownloadDir)
 	}
 
 	if !Exists(SegmentedDir) || !Exists(BaseImage) {
@@ -146,10 +146,10 @@ func process(context *cli.Context) {
 		args = []string{context.String("extract"), "segment", xml, DownloadDir, SegmentedDir}
 		out, err := Run(args...)
 		if err != nil {
-			logger.Error("error running %v: %v", args, out)
+			logger.Errorf("error running %v: %v", args, out)
 		}
 	} else {
-		logger.Debug("Segmented exists in %v", SegmentedDir)
+		logger.Debugf("Segmented exists in %v", SegmentedDir)
 	}
 
 	// Copy XML over into the segmented directory
@@ -177,7 +177,7 @@ func process(context *cli.Context) {
 			normalized_nodule_id, _ := nodule.GetInt64("normalized_nodule_id")
 			centroid, _ := nodule.GetFloat64Array("centroidLPS")
 			label_value, _ := nodule.GetFloat64("label_value")
-			logger.Debug("Nodule id: %v label: %v centroid: %v", normalized_nodule_id, label_value, centroid)
+			logger.Debugf("Nodule id: %v label: %v centroid: %v", normalized_nodule_id, label_value, centroid)
 
 			// Run the segmentations
 			GroundTruth := filepath.Join(SegmentedDir, fmt.Sprintf("read_%v.nii.gz", read_id))
@@ -204,20 +204,20 @@ func process(context *cli.Context) {
 						outputSegmentation,
 					}
 					out, err := Run(cli...)
-					logger.Debug("running: %v", cli)
-					logger.Debug("output: %v", out)
+					logger.Debugf("running: %v", cli)
+					logger.Debugf("output: %v", out)
 					if err != nil {
-						logger.Error("Error running %v -- %v\nOutput:%v", cli, err.Error(), out)
+						logger.Errorf("Error running %v -- %v\nOutput:%v", cli, err.Error(), out)
 					}
 
 					cliString := strings.Join(cli, " ")
 					measures := filepath.Join(SegmentedDir, algorithm+tag+".json")
-					logger.Debug("Tag: %v Suffix: %v Measures: %v", tag, suffix, measures)
+					logger.Debugf("Tag: %v Suffix: %v Measures: %v", tag, suffix, measures)
 					args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", cliString, outputSegmentation, GroundTruth, measures}
-					logger.Debug("Running evaluation on %v / %v", tag, args)
+					logger.Debugf("Running evaluation on %v / %v", tag, args)
 					out, err = Run(args...)
 					if err != nil {
-						logger.Error("Error running %v: %v", args, out)
+						logger.Errorf("Error running %v: %v", args, out)
 					}
 
 					// Calculate PyRadiomics features, assumes the proper Python library is installed
@@ -226,10 +226,10 @@ func process(context *cli.Context) {
 						"--label", fmt.Sprintf("%v", label_value),
 						filepath.Join(SegmentedDir, "image.nii.gz"),
 						outputSegmentation, features}
-					logger.Info("Running features on %v / %v", tag, args)
+					logger.Infof("Running features on %v / %v", tag, args)
 					out, err = Run(args...)
 					if err != nil {
-						logger.Error("Error calculating features\n%v\nError: %v", args, out)
+						logger.Errorf("Error calculating features\n%v\nError: %v", args, out)
 					}
 
 				}
@@ -244,13 +244,13 @@ func process(context *cli.Context) {
 			// 		base := basename(basename(suffix))
 			// 		measures := filepath.Join(SegmentedDir, tag+base+".json")
 
-			// 		logger.Info("Tag: %v Suffix: %v Measures: %v", tag, suffix, measures)
+			// 		logger.Infof("Tag: %v Suffix: %v Measures: %v", tag, suffix, measures)
 
 			// 		args = []string{"python", context.String("evaluate"), "--label", fmt.Sprintf("%v", label_value), "--cli", tag, match, GroundTruth, measures}
-			// 		logger.Info("Running: %v", args)
+			// 		logger.Infof("Running: %v", args)
 			// 		out, err := Run(args...)
 			// 		if err != nil {
-			// 			logger.Error("Error running %v: %v", args, out)
+			// 			logger.Errorf("Error running %v: %v", args, out)
 			// 		}
 			// 	}
 		}
@@ -258,11 +258,11 @@ func process(context *cli.Context) {
 
 	// If we are to clean up, delete the DICOM directory
 	if context.Bool("clean") || context.Bool("clean-dicom") {
-		logger.Debug("Cleaning up %v", DownloadDir)
+		logger.Debugf("Cleaning up %v", DownloadDir)
 		os.RemoveAll(DownloadDir)
 	}
 	if context.Bool("clean") {
-		logger.Debug("Removing all images from %v", SegmentedDir)
+		logger.Debugf("Removing all images from %v", SegmentedDir)
 		fileList, err := filepath.Glob(filepath.Join(SegmentedDir, "*.nii.gz"))
 		if err != nil {
 			logger.Fatalf("Error globbing %v", err.Error())
