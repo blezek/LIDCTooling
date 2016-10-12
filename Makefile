@@ -33,6 +33,9 @@ export help
 help:
 	@echo "$$help"
 
+update:
+	go get -u -v LIDCFetch/...
+
 deps:
 	go get -d -v LIDCFetch/...
 
