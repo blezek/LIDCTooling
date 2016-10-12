@@ -4,9 +4,11 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
 
+  config.vm.synced_folder "../pyradiomics", "/pyradiomics"
+  
   config.vm.provider "virtualbox" do |vb|
     # Customize the amount of memory on the VM:
-    vb.memory = "4096"
+    vb.memory = "6000"
     vb.cpus = 6
   end
   
