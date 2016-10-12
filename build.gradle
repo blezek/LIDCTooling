@@ -36,7 +36,7 @@ task collectJars(type: Copy){
 
 task moreStartScripts(type: CreateStartScripts) {
   mainClassName = 'com.yittlebits.lidc.Extract'
-  applicationName = "Extract"
+  applicationName = "extract"
   outputDir = new File(project.buildDir, 'scripts')
   classpath = jar.outputs.files + project.configurations.runtime
 }

@@ -11,4 +11,5 @@ ssh-add  ~/.ssh/radiomics.rsa
 rsync -arv algorithms ClusterSoftware/
 rsync -arv --delete --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
 rsync -arv devops/*.sh sgeadmin@$MASTER:
+rsync -arv bin/processLIDC sgeadmin@$MASTER:
 

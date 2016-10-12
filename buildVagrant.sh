@@ -1,19 +1,24 @@
-#!/bin/sh
+#!/bin/bash
+
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -eo pipefail
+IFS=$'\n\t'
 
 # Build instructions for Vagrant (Ubuntu trusty64)
 NPROC=`getconf _NPROCESSORS_ONLN`
 
 ### Install our packages
-sudo apt-get update 
-sudo apt-get install -y cmake curl git subversion clang freeglut3-dev libxml2-dev g++ python-pip python-virtualenv
+# sudo apt-get update 
+sudo apt-get install -y cmake curl git subversion clang freeglut3-dev libxml2-dev g++ python-pip python-virtualenv python-dev
+sudo apt-get install -y golang jq unzip
 # freeglut3-dev brings in OpenGL
 
 ### Go
 if [[ ! -e /usr/local/go/bin/go  ]]; then
-   curl -L -O "https://storage.googleapis.com/golang/go1.5.1.linux-amd64.tar.gz"
-   sudo tar -C /usr/local -xzf go1.5.1.linux-amd64.tar.gz
+   curl -L -O "https://storage.googleapis.com/golang/go1.7.1.linux-amd64.tar.gz"
+   sudo tar -C /usr/local -xzf go1.7.1.linux-amd64.tar.gz
    cat >> .bashrc <<EOF
-export PATH=$PATH:/usr/local/go/bin
+export PATH=/usr/local/go/bin:$PATH
 EOF
    . .bashrc
 fi
@@ -48,35 +53,40 @@ fi
 cd
 branch=$(cd /vagrant && git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
 if [[ ! -e LIDCTooling ]]; then
-   git clone https://github.com/dblezek/LIDCTooling.git
+#   git clone https://github.com/dblezek/LIDCTooling.git
+   rsync --exclude ClusterSoftware --exclude segmented --exclude dicom -ra /vagrant/ LIDCTooling
 fi
 
 # rsync --exclude ClusterSoftware --exclude segmented --exclude dicom -ra /vagrant LIDCTooling 
 
 cd LIDCTooling
-git pull
-git checkout $branch
 make build
 ./gradlew installDist
 
 
+cd
+if [[ ! -e jq ]]; then
+    wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+    mv jq-linux64 jq
+    chmod 755 jq
+fi
+
 ### Build the python virtual environment
 cd
-if [[ ! -e pyradiomics ]]; then
-    git clone git@github.com:blezek/pyradiomics.git
-fi
 virtualenv lidc-venv
 source lidc-venv/bin/activate
-(cd pyradiomics && python setup.py install)
-# pip install -U pip
-easy_install -f http://www.simpleitk.org/SimpleITK/resources/software.html SimpleITK
-pip install PyWavelets
-pip install tqdm
+pip install numpy==1.11.0
+pip install -f http://www.simpleitk.org/SimpleITK/resources/software.html SimpleITK==0.9.1
+pip install tqdm==4.7.1
+pip install PyWavelets==0.4.0
+(cd /pyradiomics && python setup.py install)
 
 ### Get LIDC XML files
 cd
-wget -O LIDC_XML-only.tar.gz "https://wiki.cancerimagingarchive.net/download/attachments/3539039/LIDC-XML-only.tar.gz?version=1&modificationDate=1360694838194&api=v2"
-tar fxz LIDC_XML-only.tar.gz
+if [[ ! -e LIDC_XML-only.tar.gz ]]; then
+    wget -O LIDC_XML-only.tar.gz "https://wiki.cancerimagingarchive.net/download/attachments/3539039/LIDC-XML-only.tar.gz?version=1&modificationDate=1360694838194&api=v2"
+    tar fxz LIDC_XML-only.tar.gz
+fi
 
 ### Copy to host
 cd
@@ -105,4 +115,8 @@ rsync -ar /usr/lib/jvm /vagrant/ClusterSoftware/
 rsync -ar tcia-lidc-xml /vagrant/ClusterSoftware/
 find tcia-lidc-xml -name "*.xml" | sort > /vagrant/ClusterSoftware/lidc.txt
 
+# jq
+rsync -ar jq /vagrant/ClusterSoftware/bin
 
+# Install everything locally
+sudo ln --symbolic /vagrant/ClusterSoftware /software
