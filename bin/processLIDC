@@ -1,0 +1,172 @@
+#!/bin/bash
+# SGE Parameters
+
+## Name
+#$ -N lidc
+
+## working directory
+#$ -cwd
+
+## Array job, should be 1-1318
+#$ -t 1-1318
+
+## Export variables
+#$ -V
+
+## Logs -- to /dev/null
+# -o /home/sgeadmin/logs/
+#$ -j yes
+#$ -e /dev/null
+#$ -o /dev/null
+
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+# set -uo pipefail
+IFS=$'\n\t'
+
+# This script will download DICOM from LIDC, extract the radiologists'
+# segmentations, run the algorithms and compute the radiomics features.
+
+algorithm_dir=`pwd`/algorithms
+XMLORIG=`pwd`/ClusterSoftware/tcia-lidc-xml/157/158.xml
+# Substitute 1 if job is not set
+export JOBID=${SGE_TASK_ID:=1}
+
+# Some variables
+if [ `uname` = 'Linux' ]; then
+
+    # Linux paths
+    export JAVA_HOME=/software/jvm/jdk1.8.0_20
+    export PATH=$PATH:$JAVA_HOME/bin:/software/bin:/software/python
+    export LD_LIBRARY_PATH=/software/lib
+    export JAVA_OPTS="-Xmx2g"
+    # Python Virtual env
+    source /software/lidc-venv/bin/activate
+
+    # Get the XML file to run
+    XMLORIG=/software/$(sed "${JOBID}q;d" /software/lidc.txt)
+    algorithm_dir=/software/algorithms
+fi
+
+if [ "$HOSTNAME" = 'revelation' ]; then
+    # Mac path
+    PATH=`pwd`/build/install/LIDCTooling/bin:$PATH
+    PATH=`pwd`/../ChestImagingPlatform/build/CIP-build/bin/:`pwd`/python/:${PATH}
+    XMLORIG=ClusterSoftware/tcia-lidc-xml/157/158.xml
+fi
+
+# Color info from http://stackoverflow.com/a/5413029/334619
+blue_text=$(tput setaf 4)
+red_text=$(tput setaf 1)
+normal_text=$(tput sgr0)
+
+## The XML file to process
+SeriesInstanceUID=$(extract SeriesInstanceUID $XMLORIG)
+
+dicom_dir=`pwd`/dicom/$SeriesInstanceUID
+dir=`pwd`/segmented/$SeriesInstanceUID
+
+## Download from LIDC
+APIKey="864dcc73-ce40-4f19-8a3e-fce71fc2dba2"
+baseURL="https://services.cancerimagingarchive.net/services/v3/TCIA"
+
+mkdir -p $dir $dir/log
+cd $dir
+
+
+# Get the XML file
+XML=`basename $XMLORIG`
+if [[ ! -f $XML ]]; then
+   cp $XMLORIG .
+fi
+
+# Get the images from TCIA
+if [[ ! -d $dicom_dir ]]; then
+    echo Download DICOM from TCIA
+    mkdir -p $dicom_dir
+    curl --silent -o images.zip  -H "api_key: $APIKey" "$baseURL/query/getImage?SeriesInstanceUID=$SeriesInstanceUID&api_key=$APIKey"
+    unzip -o -q images.zip -d $dicom_dir 
+fi
+
+if [[ ! -f reads.json ]]; then
+    echo Segmenting DICOM
+    extract segment $XML $dicom_dir .
+fi
+
+
+jq -r ".reads[].id" reads.json | while read read_id
+do
+    read=$(jq ".reads[] | select(.id = $read_id)" reads.json)
+    # loop over the nodules
+    echo $read | jq -r ".nodules[].id" | while read nodule_id
+    do
+        nodule=$(echo $read | jq ".nodules[] | select ( .id == \"$nodule_id\" )")
+        normalized_nodule_id=$(echo $nodule | jq -r ".normalized_nodule_id")
+        label_value=$(echo $nodule | jq -r ".label_value")
+        centroid_x=$(echo $nodule | jq -r ".centroidLPS[0]")
+        centroid_y=$(echo $nodule | jq -r ".centroidLPS[1]")
+        centroid_z=$(echo $nodule | jq -r ".centroidLPS[2]")
+
+        # Ground truth
+        ground_truth=read_${read_id}.nii.gz
+        tag=_read_${read_id}_nodule_${normalized_nodule_id}
+        suffix=${tag}.nii.gz
+
+        printf "Processing Read: $read_id -- Nodule: $normalized_nodule_id ($nodule_id)\n"
+        for algorithm in $algorithm_dir/*; do
+            algorithm_name=$(basename $algorithm)
+            printf "%-50.50s" "  Executing $algorithm_name"
+            (set -x; $algorithm \
+                --dicom $dicom_dir \
+                --read $read_id \
+                --nodule $normalized_nodule_id \
+                --segmentation_path `pwd` \
+                --ground_truth $ground_truth \
+                --label_value $label_value \
+                $dir/image.nii.gz \
+                $centroid_x $centroid_y $centroid_z \
+                ${algorithm_name}${suffix}) > log/${algorithm_name}${tag}.log 2>&1
+            if [[ $? -eq 0 ]]; then
+                printf " ... Passed\n"
+            else
+                printf " ... ${red_text}FAILED${normal_text}\n"
+            fi
+
+            cli="$algorithm --dicom $dicom_dir --read $read_id --nodule $normalized_nodule_id --segmentation_path `pwd` --ground_truth $ground_truth --label_value $label_value $dir/image.nii.gz $centroid_x $centroid_y $centroid_z ${algorithm_name}${suffix}"
+
+            
+            # Evaluate and run the radiomics
+            if [[ $? -eq 0 ]]; then
+                measures=${algorithm_name}${tag}.json
+                printf "%-50.50s" "    Evaluate Segmentation"
+                (set -x; evaluateSegmentation \
+                    --label $label_value \
+                    --cli "$cli" \
+                    ${algorithm_name}${suffix} \
+                    ${ground_truth} \
+                    ${measures}) > log/${algorithm_name}${tag}.log 2>&1
+                if [[ $? -eq 0 ]]; then
+                    printf "%s\n" " ... Passed"
+                else
+                    printf "%s\n" " ... ${red_text}FAILED${normal_text}"
+                fi
+
+                printf "%-50.50s" "    Evaluate Features"
+                features=${algorithm_name}${tag}_features.json
+                (set -x; computeRadiomics \
+                    --label $label_value \
+                    image.nii.gz \
+                    ${algorithm_name}${suffix} \
+                    ${features}) > log/${algorithm_name}${tag}_features.log 2>&1
+                if [[ $? -eq 0 ]]; then
+                    printf "%s\n" " ... Passed"
+                else
+                    printf "%s\n" " ... ${red_text}FAILED${normal_text}"
+                fi
+            fi
+        exit
+        done
+    done
+done
+
+
+
