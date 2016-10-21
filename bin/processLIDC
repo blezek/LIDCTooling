@@ -45,9 +45,7 @@ if [ `uname` = 'Linux' ]; then
     # Get the XML file to run
     XMLORIG=/software/$(sed "${JOBID}q;d" /software/lidc.txt)
     algorithm_dir=/software/algorithms
-fi
-
-if [ "$HOSTNAME" = 'revelation' ]; then
+else
     # Mac path
     PATH=`pwd`/build/install/LIDCTooling/bin:$PATH
     PATH=`pwd`/../ChestImagingPlatform/build/CIP-build/bin/:`pwd`/python/:${PATH}
@@ -71,7 +69,20 @@ baseURL="https://services.cancerimagingarchive.net/services/v3/TCIA"
 
 mkdir -p $dir $dir/log
 cd $dir
+touch failed.txt
+printf "{}" > error.json
 
+function writeError {
+    name=$1
+    log=$2
+    cat error.json | \
+        jq \
+            --null-input --raw-input \
+            --arg name "$name" \
+            --arg log "log/$log" \
+            '.errors |= .+ [{"name":$name, "log":$log, "text":input}]' log/$log > error.temp.json
+    mv error.temp.json error.json
+}
 
 # Get the XML file
 XML=`basename $XMLORIG`
@@ -84,7 +95,8 @@ if [[ ! -d $dicom_dir ]]; then
     echo Download DICOM from TCIA
     mkdir -p $dicom_dir
     curl --silent -o images.zip  -H "api_key: $APIKey" "$baseURL/query/getImage?SeriesInstanceUID=$SeriesInstanceUID&api_key=$APIKey"
-    unzip -o -q images.zip -d $dicom_dir 
+    unzip -o -q images.zip -d $dicom_dir
+    rm -f images.zip
 fi
 
 if [[ ! -f reads.json ]]; then
@@ -92,14 +104,13 @@ if [[ ! -f reads.json ]]; then
     extract segment $XML $dicom_dir .
 fi
 
-
-jq -r ".reads[].id" reads.json | while read read_id
-do
-    read=$(jq ".reads[] | select(.id = $read_id)" reads.json)
+for read_id in $(jq -r ".reads[].id" reads.json); do
+    read=$(jq ".reads[] | select(.id == $read_id)" reads.json)
+    read_uid=$(echo $read | jq -r ".uid")
     # loop over the nodules
-    echo $read | jq -r ".nodules[].id" | while read nodule_id
-    do
+    for nodule_id in $(echo $read | jq -r ".nodules[].id"); do
         nodule=$(echo $read | jq ".nodules[] | select ( .id == \"$nodule_id\" )")
+        nodule_uid=$(echo $nodule | jq -r ".uid")
         normalized_nodule_id=$(echo $nodule | jq -r ".normalized_nodule_id")
         label_value=$(echo $nodule | jq -r ".label_value")
         centroid_x=$(echo $nodule | jq -r ".centroidLPS[0]")
@@ -111,7 +122,7 @@ do
         tag=_read_${read_id}_nodule_${normalized_nodule_id}
         suffix=${tag}.nii.gz
 
-        printf "Processing Read: $read_id -- Nodule: $normalized_nodule_id ($nodule_id)\n"
+        printf "Processing Read: $read_id -- Normalized Nodule: $normalized_nodule_id ($nodule_id)\n"
         for algorithm in $algorithm_dir/*; do
             algorithm_name=$(basename $algorithm)
             printf "%-50.50s" "  Executing $algorithm_name"
@@ -129,10 +140,11 @@ do
                 printf " ... Passed\n"
             else
                 printf " ... ${red_text}FAILED${normal_text}\n"
+                writeError "${algorithm_name}${tag}" "${algorithm_name}${tag}.log"
             fi
 
             cli="$algorithm --dicom $dicom_dir --read $read_id --nodule $normalized_nodule_id --segmentation_path `pwd` --ground_truth $ground_truth --label_value $label_value $dir/image.nii.gz $centroid_x $centroid_y $centroid_z ${algorithm_name}${suffix}"
-
+            measure_uid=$(echo $cli | shasum | awk '{print $1}')
             
             # Evaluate and run the radiomics
             if [[ $? -eq 0 ]]; then
@@ -141,18 +153,25 @@ do
                 (set -x; evaluateSegmentation \
                     --label $label_value \
                     --cli "$cli" \
+                    --nodule_uid "$nodule_uid" \
+                    --read_uid "$read_uid" \
+                    --measure_uid "$measure_uid" \
                     ${algorithm_name}${suffix} \
                     ${ground_truth} \
-                    ${measures}) > log/${algorithm_name}${tag}.log 2>&1
+                    ${measures}) > log/${algorithm_name}${tag}_evaluate.log 2>&1
                 if [[ $? -eq 0 ]]; then
                     printf "%s\n" " ... Passed"
                 else
                     printf "%s\n" " ... ${red_text}FAILED${normal_text}"
+                    writeError "${algorithm_name}${tag}_evaluate" "${algorithm_name}${tag}_evaluate.log"
                 fi
 
                 printf "%-50.50s" "    Evaluate Features"
                 features=${algorithm_name}${tag}_features.json
                 (set -x; computeRadiomics \
+                    --nodule_uid "$nodule_uid" \
+                    --read_uid "$read_uid" \
+                    --algorithm "${algorithm_name}" \
                     --label $label_value \
                     image.nii.gz \
                     ${algorithm_name}${suffix} \
@@ -161,12 +180,13 @@ do
                     printf "%s\n" " ... Passed"
                 else
                     printf "%s\n" " ... ${red_text}FAILED${normal_text}"
+                    writeError "${algorithm_name}${tag}_features" "${algorithm_name}${tag}_features.log"
                 fi
             fi
-        exit
         done
     done
 done
+touch finished
 
 
 
