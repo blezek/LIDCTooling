@@ -46,7 +46,7 @@ After the `lidc.sh` script generates all the files, `evaluate.sh` passes through
 SQLite provides a command line query interface with CSV output.
 
 ```bash
-sqlite3 -header -csv test.db "select * from nodules"
+sqlite3 -header -csv lidc.db "select * from nodules"
 ```
 
 ### Select average Hausdorff distance for all reads
