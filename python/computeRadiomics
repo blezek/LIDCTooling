@@ -20,6 +20,9 @@ Usage:
   computeRadiomics.py [options] image mask output
   options:
     --log <value>   -- log level, DEBUG,INFO,WARNING default is WARNING
+    --no-crop       -- do not crop
+    --nodule_uid    -- unique identifier of the nodule
+    --read_uid      -- unique identifier of the read
   parameters:
     image           -- image from which to compute statistics
     mask            -- image containing binary segmentation
@@ -29,7 +32,7 @@ Usage:
 #testBinWidth = 25 this is the default bin size
 #testResampledPixelSpacing = (3,3,3) no resampling for now.
 
-in_opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label=","log="])
+in_opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label=","log=","no-crop","nodule_uid=","read_uid=","algorithm="])
 opts = { '--log': 'WARNING' }
 opts.update ( in_opts )
 
@@ -42,6 +45,10 @@ imageName = args[0]
 maskName = args[1]
 outputName = args[2]
 features = {}
+# Add identifiers
+features["nodule_uid"] = opts.get("--nodule_uid", "")
+features["read_uid"] = opts.get("--read_uid", "")
+features["algorithm"] = opts.get("--algorithm", "")
 
 level = logging.WARNING
 if '--log' in opts:
@@ -61,8 +68,15 @@ mask = sitk.ReadImage(maskName)
 mask = sitk.BinaryThreshold(mask,1, 10000, 1, 0)
 # sitk.WriteImage(mask, 'mask.nii')
 
-apporx, ret = imageoperations.swt3(image)
-image = ret[0].values()[0]
+# Crop
+if not '--no-crop' in opts:
+  logging.info("Cropping image and mask")
+  image, mask = imageoperations.cropToTumorMask(image, mask)
+  sitk.WriteImage(image, 'cropped_image.nii')
+  sitk.WriteImage(mask, 'cropped_mask.nii')
+
+
+
 #
 # Show the first order feature calculations
 #
@@ -198,6 +212,7 @@ logging.info( 'Calculated GLSZM features: ')
 for (key,val) in glszmFeatures.featureValues.iteritems():
   logging.info( '  '+key+':'+str(val))
   features['glszm'][key] = val
+
 
 # Save
 with open(outputName, 'w') as fid:

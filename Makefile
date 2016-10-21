@@ -22,7 +22,8 @@ Cluster (make CLUSTER=test TEMPLATE=smallcluster)
 Cluster Templates
   smallcluster    - testing, 2 micro nodes
   lidc            - production, 10 c3.xlarge spot instances
-  io              - 1 c3.large for install / data movement
+  io              - 1 r3.large for install / data movement
+  memory          - 20x r3.large (large memory) spot instances
 
 Example:
 make build
