@@ -70,18 +70,17 @@ baseURL="https://services.cancerimagingarchive.net/services/v3/TCIA"
 mkdir -p $dir $dir/log
 cd $dir
 touch failed.txt
-printf "{}" > error.json
+printf '{ "errors" : [] }' > error.json
 
 function writeError {
     name=$1
     log=$2
-    cat error.json | \
-        jq \
-            --null-input --raw-input \
-            --arg name "$name" \
-            --arg log "log/$log" \
-            '.errors |= .+ [{"name":$name, "log":$log, "text":input}]' log/$log > error.temp.json
-    mv error.temp.json error.json
+    jq \
+        --arg name "$name" \
+        --arg log "log/$log" \
+        --arg text "$(jq -rRs . log/$log)" \
+        '.errors += [{"name":$name, "log":$log, "text":$text}]' error.json > error.temp.json
+    cp error.temp.json error.json
 }
 
 # Get the XML file
@@ -148,7 +147,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
             
             # Evaluate and run the radiomics
             if [[ $? -eq 0 ]]; then
-                measures=${algorithm_name}${tag}.json
+                measures=${algorithm_name}${tag}_measures.json
                 printf "%-50.50s" "    Evaluate Segmentation"
                 (set -x; evaluateSegmentation \
                     --label $label_value \
@@ -156,6 +155,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
                     --nodule_uid "$nodule_uid" \
                     --read_uid "$read_uid" \
                     --measure_uid "$measure_uid" \
+                    --algorithm "${algorithm_name}" \
                     ${algorithm_name}${suffix} \
                     ${ground_truth} \
                     ${measures}) > log/${algorithm_name}${tag}_evaluate.log 2>&1
@@ -163,7 +163,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
                     printf "%s\n" " ... Passed"
                 else
                     printf "%s\n" " ... ${red_text}FAILED${normal_text}"
-                    writeError "${algorithm_name}${tag}_evaluate" "${algorithm_name}${tag}_evaluate.log"
+                    writeError "${algorithm_name}${tag}_measures" "${algorithm_name}${tag}_measures.log"
                 fi
 
                 printf "%-50.50s" "    Evaluate Features"

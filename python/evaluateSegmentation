@@ -11,6 +11,7 @@ Usage:
     --nodule_uid           -- unique identifier of the nodule
     --read_uid             -- unique identifier of the read
     --measure_uid          -- unique identifier of the measurements
+    --algorithm            -- algorithm name
 """
 
 import getopt
@@ -20,7 +21,7 @@ import math
 
 
 # Parse 
-opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label=","threshold=","cli=","nodule_uid=","read_uid=","measure_uid="])
+opts,args = getopt.getopt(sys.argv[1:], "", longopts=["label=","threshold=","cli=","nodule_uid=","read_uid=","measure_uid=", "algorithm="])
 
 if len(args) < 3:
     print usage
@@ -65,7 +66,8 @@ measures = {
     },
     "nodule_uid": settings.get("--nodule_uid", ""),
     "read_uid": settings.get("--read_uid", ""),
-    "measure_uid":settings.get("--measure_uid", "")
+    "uid":settings.get("--measure_uid", ""),
+    "algorithm" : settings.get("--algorithm", "")
 }
 
 

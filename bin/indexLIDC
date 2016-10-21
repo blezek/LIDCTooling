@@ -46,4 +46,167 @@ else
     XMLORIG=ClusterSoftware/tcia-lidc-xml/157/158.xml
 fi
 
+# in 'main' we can reference functions later in the script
+main() {
+    # Database name
+    DB=${1:-lidc.db}
+    DB=$(fullPath $DB)
+    
+    createDB
+    wd=$(pwd)
+    # Index the reads
+    for dir in segmented/*; do
+        indexRead $dir
+        cd $wd
+    done
+    
+}
 
+
+function indexRead {
+    dir=$1
+    cd $dir
+    getValues reads.json . $(jq -r .uid reads.json) series
+
+    echo Processing $dir
+    for read_id in $(jq -r ".reads[].id" reads.json); do
+        read_uid=$(jq -r ".reads[] | select(.id == $read_id) | .uid" reads.json)
+        echo Read: $read_id uid $read_uid
+        getValues reads.json ".reads[] | select(.id == $read_id)" $read_uid reads
+        for nodule_id in $(jq -r ".reads[] | select(.uid == \"$read_uid\") | .nodules[].id" reads.json); do
+            printf "=====\n%s\n=====\n" "Processing Nodule: $nodule_uid"
+            
+            jq ".reads[].nodules[] | select ( .id == \"$nodule_id\" )" reads.json > nodule.json
+            nodule_uid=$(jq -r .uid nodule.json)
+            getValues nodule.json . $nodule_uid nodules
+            getValues nodule.json .characteristics $nodule_uid nodules
+            sqlite3 $DB <<EOF
+ update nodules set read_uid = '$read_uid' where uid = '$nodule_uid';
+EOF
+            #         nodule_uid=$(echo $nodule | jq -r ".uid")
+            done
+    done
+
+    # Process all the measures
+    for fid in *_measures.json; do
+        uid=$(jq -r .uid $fid)
+        getValues $fid . $uid measures
+        getValues $fid .measures $uid measures
+    done
+    
+    #     read=$(jq ".reads[] | select(.id == $read_id)" reads.json)
+    #     read_uid=$(echo $read | jq -r ".uid")
+    #     for nodule_id in $(echo $read | jq -r ".nodules[].id"); do
+    #         nodule=$(echo $read | jq ".nodules[] | select ( .id == \"$nodule_id\" )")
+    #         nodule_uid=$(echo $nodule | jq -r ".uid")
+    #         normalized_nodule_id=$(echo $nodule | jq -r ".normalized_nodule_id")
+    
+}
+
+function fullPath {
+    echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+}
+
+# Take a json file, JSON path, uid, and table to insert values into
+function getValues {
+    file=$1
+    path=$2
+    uid=$3
+    table=$4
+    # echo $file $path $uid $table
+    sqlite3 $DB <<EOF
+insert or ignore into $table ( uid ) values ( '$uid' );
+EOF
+    # Get all the keys
+    for key in $(jq -r "$path | keys | .[]" $file); do
+        
+        value=$(jq -r "$path | .[\"$key\"] // \"\" " $file)
+        # echo $key
+         sqlite3 $DB <<EOF
+ update or ignore $table set $key = '$value' where uid = '$uid';
+EOF
+    done
+}
+
+function createDB {
+# Create the database
+sqlite3 $DB <<EOF
+create table if not exists series (
+  uid text primary key,
+  series_instance_uid text,
+  study_instance_uid text,
+  patient_name text,
+  patient_id text,
+  manufacturer text,
+  manufacturer_model_name text,
+  patient_sex text,
+  patient_age text,
+  ethnic_group text,
+  contrast_bolus_agent text,
+  body_part_examined text,
+  scan_options text,
+  slice_thickness float,
+  kvp float,
+  data_collection_diameter float,
+  software_versions text,
+  reconstruction_diameter float,
+  gantry_detector_tilt float,
+  table_height float,
+  rotation_direction text,
+  exposure_time float,
+  xray_tube_current float,
+  exposure float,
+  convolution_kernel text,
+  patient_position text,
+  image_position_patient text,
+  image_orientation_patient text,
+  filename text );
+
+create table if not exists reads (
+  uid text primary key,
+  filename text,
+  id text
+);
+
+create table if not exists nodules (
+  uid text primary key,
+  read_uid text,
+  normalized_nodule_id int,
+  id text,
+  centroid text,
+  centroidLPS text,
+  point_count int,
+  label_value int,
+  subtlety int,
+  internalStructure int,
+  calcification int,
+  sphericity int,
+  margin int,
+  lobulation int,
+  spiculation int,
+  texture int,
+  malignancy int  
+);
+
+create table if not exists measures (
+  uid text primary key,
+  nodule_uid text,
+  read_uid text,
+  algorithm text,
+  command_line text,
+  false_negative_error float,
+  dice_coefficient float,
+  volume_similarity float,
+  false_positive_error float,
+  mean_overlap float,
+  union_overlap float,
+  jaccard_coefficient float,
+  hausdorff_distance float,
+  average_hausdorff_distance float
+);
+
+
+EOF
+}
+
+main "$@"
