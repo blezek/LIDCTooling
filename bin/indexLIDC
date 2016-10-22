@@ -58,6 +58,10 @@ main() {
     for dir in segmented/*; do
         indexRead $dir
         cd $wd
+        indexFeatures $dir
+        cd $wd
+        captureErrors $dir
+        cd $wd
     done
     
 }
@@ -68,14 +72,14 @@ function indexRead {
     cd $dir
     getValues reads.json . $(jq -r .uid reads.json) series
 
-    echo Processing $dir
     for read_id in $(jq -r ".reads[].id" reads.json); do
         read_uid=$(jq -r ".reads[] | select(.id == $read_id) | .uid" reads.json)
         echo Read: $read_id uid $read_uid
         getValues reads.json ".reads[] | select(.id == $read_id)" $read_uid reads
+        printf "Nodules"
         for nodule_id in $(jq -r ".reads[] | select(.uid == \"$read_uid\") | .nodules[].id" reads.json); do
-            printf "=====\n%s\n=====\n" "Processing Nodule: $nodule_uid"
-            
+            # printf "%s\n" "Processing Nodule: $nodule_uid"
+            printf "."
             jq ".reads[].nodules[] | select ( .id == \"$nodule_id\" )" reads.json > nodule.json
             nodule_uid=$(jq -r .uid nodule.json)
             getValues nodule.json . $nodule_uid nodules
@@ -84,15 +88,22 @@ function indexRead {
  update nodules set read_uid = '$read_uid' where uid = '$nodule_uid';
 EOF
             #         nodule_uid=$(echo $nodule | jq -r ".uid")
-            done
+        done
+        printf "\n"
     done
 
     # Process all the measures
+    printf "Measures"
     for fid in *_measures.json; do
-        uid=$(jq -r .uid $fid)
+        printf "."
+        uid=$(jq -r '"\(.algorithm)-\(.nodule_uid)"' $fid)
         getValues $fid . $uid measures
         getValues $fid .measures $uid measures
+        sqlite3 $DB <<EOF
+update measures set path = '$dir' where uid = '$uid';
+EOF
     done
+    printf "\n"
     
     #     read=$(jq ".reads[] | select(.id == $read_id)" reads.json)
     #     read_uid=$(echo $read | jq -r ".uid")
@@ -101,6 +112,38 @@ EOF
     #         nodule_uid=$(echo $nodule | jq -r ".uid")
     #         normalized_nodule_id=$(echo $nodule | jq -r ".normalized_nodule_id")
     
+}
+
+function indexFeatures {
+    dir=$1
+    cd $dir
+    printf "Features"
+    for fid in *_features.json; do
+        printf "."
+        uid=$(jq -r '"\(.algorithm)-\(.nodule_uid)"' $fid)
+        getValues $fid . $uid features
+        for t in first_order glcm glszm rlgl shape; do
+            getValues $fid .${t} $uid features
+        done
+    done
+    printf "\n"
+}
+
+
+function captureErrors {
+    dir=$1
+    cd $dir
+    length=$(jq -r '.errors | length' error.json)
+    echo Processing $length errors in $dir
+    ((length = length - 1))
+    # length=$(echo $((length--)))
+    for i in `seq 0 $length`; do
+        uid=$(uuidgen)
+        getValues error.json ".errors[$i]" $uid errors
+        sqlite3 $DB <<EOF
+update errors set path = '$dir' where uid = '$uid';
+EOF
+    done
 }
 
 function fullPath {
@@ -119,12 +162,13 @@ insert or ignore into $table ( uid ) values ( '$uid' );
 EOF
     # Get all the keys
     for key in $(jq -r "$path | keys | .[]" $file); do
-        
-        value=$(jq -r "$path | .[\"$key\"] // \"\" " $file)
-        # echo $key
-         sqlite3 $DB <<EOF
+        if [[ $tableinfo == *${key}* ]]; then
+            value=$(jq -r "$path | .[\"$key\"] // \"\" " $file)
+            # echo $key
+            sqlite3 $DB <<EOF
  update or ignore $table set $key = '$value' where uid = '$uid';
 EOF
+        fi
     done
 }
 
@@ -192,6 +236,7 @@ create table if not exists measures (
   uid text primary key,
   nodule_uid text,
   read_uid text,
+  path text,
   algorithm text,
   command_line text,
   false_negative_error float,
@@ -205,8 +250,232 @@ create table if not exists measures (
   average_hausdorff_distance float
 );
 
+create table if not exists errors (
+  uid text primary key,
+  path text,
+  name text,
+  log text,
+  text text
+);
+
+create table if not exists features (
+  uid text primary key,
+  nodule_uid text,
+  read_uid text,
+  algorithm text,
+  LoG_sigma_05_Energy real,
+  LoG_sigma_05_Entropy real,
+  LoG_sigma_05_Kurtosis real,
+  LoG_sigma_05_Maximum real,
+  LoG_sigma_05_Mean real,
+  LoG_sigma_05_MeanDeviation real,
+  LoG_sigma_05_Median real,
+  LoG_sigma_05_Minimum real,
+  LoG_sigma_05_Range real,
+  LoG_sigma_05_RootMeanSquared real,
+  LoG_sigma_05_Skewness real,
+  LoG_sigma_05_StandardDeviation real,
+  LoG_sigma_05_TotalEnergy real,
+  LoG_sigma_05_Uniformity real,
+  LoG_sigma_05_Variance real,
+  LoG_sigma_10_Energy real,
+  LoG_sigma_10_Entropy real,
+  LoG_sigma_10_Kurtosis real,
+  LoG_sigma_10_Maximum real,
+  LoG_sigma_10_Mean real,
+  LoG_sigma_10_MeanDeviation real,
+  LoG_sigma_10_Median real,
+  LoG_sigma_10_Minimum real,
+  LoG_sigma_10_Range real,
+  LoG_sigma_10_RootMeanSquared real,
+  LoG_sigma_10_Skewness real,
+  LoG_sigma_10_StandardDeviation real,
+  LoG_sigma_10_TotalEnergy real,
+  LoG_sigma_10_Uniformity real,
+  LoG_sigma_10_Variance real,
+  LoG_sigma_15_Energy real,
+  LoG_sigma_15_Entropy real,
+  LoG_sigma_15_Kurtosis real,
+  LoG_sigma_15_Maximum real,
+  LoG_sigma_15_Mean real,
+  LoG_sigma_15_MeanDeviation real,
+  LoG_sigma_15_Median real,
+  LoG_sigma_15_Minimum real,
+  LoG_sigma_15_Range real,
+  LoG_sigma_15_RootMeanSquared real,
+  LoG_sigma_15_Skewness real,
+  LoG_sigma_15_StandardDeviation real,
+  LoG_sigma_15_TotalEnergy real,
+  LoG_sigma_15_Uniformity real,
+  LoG_sigma_15_Variance real,
+  LoG_sigma_20_Energy real,
+  LoG_sigma_20_Entropy real,
+  LoG_sigma_20_Kurtosis real,
+  LoG_sigma_20_Maximum real,
+  LoG_sigma_20_Mean real,
+  LoG_sigma_20_MeanDeviation real,
+  LoG_sigma_20_Median real,
+  LoG_sigma_20_Minimum real,
+  LoG_sigma_20_Range real,
+  LoG_sigma_20_RootMeanSquared real,
+  LoG_sigma_20_Skewness real,
+  LoG_sigma_20_StandardDeviation real,
+  LoG_sigma_20_TotalEnergy real,
+  LoG_sigma_20_Uniformity real,
+  LoG_sigma_20_Variance real,
+  LoG_sigma_25_Energy real,
+  LoG_sigma_25_Entropy real,
+  LoG_sigma_25_Kurtosis real,
+  LoG_sigma_25_Maximum real,
+  LoG_sigma_25_Mean real,
+  LoG_sigma_25_MeanDeviation real,
+  LoG_sigma_25_Median real,
+  LoG_sigma_25_Minimum real,
+  LoG_sigma_25_Range real,
+  LoG_sigma_25_RootMeanSquared real,
+  LoG_sigma_25_Skewness real,
+  LoG_sigma_25_StandardDeviation real,
+  LoG_sigma_25_TotalEnergy real,
+  LoG_sigma_25_Uniformity real,
+  LoG_sigma_25_Variance real,
+  LoG_sigma_30_Energy real,
+  LoG_sigma_30_Entropy real,
+  LoG_sigma_30_Kurtosis real,
+  LoG_sigma_30_Maximum real,
+  LoG_sigma_30_Mean real,
+  LoG_sigma_30_MeanDeviation real,
+  LoG_sigma_30_Median real,
+  LoG_sigma_30_Minimum real,
+  LoG_sigma_30_Range real,
+  LoG_sigma_30_RootMeanSquared real,
+  LoG_sigma_30_Skewness real,
+  LoG_sigma_30_StandardDeviation real,
+  LoG_sigma_30_TotalEnergy real,
+  LoG_sigma_30_Uniformity real,
+  LoG_sigma_30_Variance real,
+  LoG_sigma_35_Energy real,
+  LoG_sigma_35_Entropy real,
+  LoG_sigma_35_Kurtosis real,
+  LoG_sigma_35_Maximum real,
+  LoG_sigma_35_Mean real,
+  LoG_sigma_35_MeanDeviation real,
+  LoG_sigma_35_Median real,
+  LoG_sigma_35_Minimum real,
+  LoG_sigma_35_Range real,
+  LoG_sigma_35_RootMeanSquared real,
+  LoG_sigma_35_Skewness real,
+  LoG_sigma_35_StandardDeviation real,
+  LoG_sigma_35_TotalEnergy real,
+  LoG_sigma_35_Uniformity real,
+  LoG_sigma_35_Variance real,
+  LoG_sigma_40_Energy real,
+  LoG_sigma_40_Entropy real,
+  LoG_sigma_40_Kurtosis real,
+  LoG_sigma_40_Maximum real,
+  LoG_sigma_40_Mean real,
+  LoG_sigma_40_MeanDeviation real,
+  LoG_sigma_40_Median real,
+  LoG_sigma_40_Minimum real,
+  LoG_sigma_40_Range real,
+  LoG_sigma_40_RootMeanSquared real,
+  LoG_sigma_40_Skewness real,
+  LoG_sigma_40_StandardDeviation real,
+  LoG_sigma_40_TotalEnergy real,
+  LoG_sigma_40_Uniformity real,
+  LoG_sigma_40_Variance real,
+  LoG_sigma_45_Energy real,
+  LoG_sigma_45_Entropy real,
+  LoG_sigma_45_Kurtosis real,
+  LoG_sigma_45_Maximum real,
+  LoG_sigma_45_Mean real,
+  LoG_sigma_45_MeanDeviation real,
+  LoG_sigma_45_Median real,
+  LoG_sigma_45_Minimum real,
+  LoG_sigma_45_Range real,
+  LoG_sigma_45_RootMeanSquared real,
+  LoG_sigma_45_Skewness real,
+  LoG_sigma_45_StandardDeviation real,
+  LoG_sigma_45_TotalEnergy real,
+  LoG_sigma_45_Uniformity real,
+  LoG_sigma_45_Variance real,
+  LoG_sigma_50_Energy real,
+  LoG_sigma_50_Entropy real,
+  LoG_sigma_50_Kurtosis real,
+  LoG_sigma_50_Maximum real,
+  LoG_sigma_50_Mean real,
+  LoG_sigma_50_MeanDeviation real,
+  LoG_sigma_50_Median real,
+  LoG_sigma_50_Minimum real,
+  LoG_sigma_50_Range real,
+  LoG_sigma_50_RootMeanSquared real,
+  LoG_sigma_50_Skewness real,
+  LoG_sigma_50_StandardDeviation real,
+  LoG_sigma_50_TotalEnergy real,
+  LoG_sigma_50_Uniformity real,
+  LoG_sigma_50_Variance real,
+  Mean real,
+  Autocorrelation real,
+  ClusterProminence real,
+  ClusterShade real,
+  ClusterTendency real,
+  Contrast real,
+  Correlation real,
+  DifferenceEntropy real,
+  Dissimilarity real,
+  Energy real,
+  Entropy real,
+  Homogeneity1 real,
+  Homogeneity2 real,
+  Idmn real,
+  Idn real,
+  Imc1 real,
+  Imc2 real,
+  InverseVariance real,
+  MaximumProbability real,
+  SumAverage real,
+  SumEntropy real,
+  SumSquares real,
+  SumSquares2 real,
+  SumVariance real,
+  SumVariance2 real,
+  HighIntensityEmphasis real,
+  HighIntensityLargeAreaEmphasis real,
+  HighIntensitySmallAreaEmphasis real,
+  IntensityVariability real,
+  LargeAreaEmphasis real,
+  LowIntensityEmphasis real,
+  LowIntensityLargeAreaEmphasis real,
+  LowIntensitySmallAreaEmphasis real,
+  SizeZoneVariability real,
+  SmallAreaEmphasis real,
+  ZonePercentage real,
+  GrayLevelNonUniformity real,
+  HighGrayLevelRunEmphasis real,
+  LongRunEmphasis real,
+  LongRunHighGrayLevelEmphasis real,
+  LongRunLowGrayLevelEmphasis real,
+  LowGrayLevelRunEmphasis real,
+  RunLengthNonUniformity real,
+  RunPercentage real,
+  ShortRunEmphasis real,
+  ShortRunHighGrayLevelEmphasis real,
+  ShortRunLowGrayLevelEmphasis real,
+  Compactness1 real,
+  Compactness2 real,
+  Maximum3DDiameter real,
+  SphericalDisproportion real,
+  Sphericity real,
+  SurfaceArea real,
+  SurfaceVolumeRatio real,
+  Volume real
+  );
 
 EOF
+tableinfo=""
+for table in measures nodules reads series errors features; do
+    tableinfo+=$(sqlite3 -separator : $DB "pragma table_info($table)" | tail -n +1 | awk -F':' '{print $2}'  )
+done
+
 }
 
 main "$@"
