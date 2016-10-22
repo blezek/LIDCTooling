@@ -123,7 +123,7 @@ for (key,val) in firstOrderFeatures.featureValues.iteritems():
     logFirstorderFeatures.calculateFeatures()
     logging.info( 'Calculated firstorder features with LoG sigma ' + str(sigma))
     for (key,val) in logFirstorderFeatures.featureValues.iteritems():
-      laplacianFeatureName = 'LoG_sigma_%s_%s' %(str(sigma),key)
+      laplacianFeatureName = 'LoG_sigma_{}_{}'.format(sigma,key).replace('.', '')
       logging.info( '  ' + laplacianFeatureName + ':' + str(val))
       fof[laplacianFeatureName] = val
 
