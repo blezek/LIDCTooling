@@ -1,7 +1,9 @@
 #!/bin/sh
 
+cluster=$1
+
 source venv/bin/activate
-cluster_meta="$(starcluster listclusters $1 2>&1)"
+cluster_meta="$(starcluster listclusters $cluster 2>&1)"
 # MASTER=$(echo "${cluster_meta}" | grep "master running" | sed -e 's/.*master.*\(ec2-.*com\)/\1/g')
 
 MASTER=$(echo "${cluster_meta}" | grep "master running" | awk '{print $4}')
@@ -12,4 +14,7 @@ rsync -arv algorithms ClusterSoftware/
 rsync -arv --delete --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
 rsync -arv devops/*.sh sgeadmin@$MASTER:
 rsync -arv bin/processLIDC sgeadmin@$MASTER:
+rsync -arv bin/indexLIDC sgeadmin@$MASTER:
+
+rsync -arv sgeadmin@$MASTER:lidc.db .
 
