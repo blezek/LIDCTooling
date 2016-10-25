@@ -103,6 +103,47 @@ if [[ ! -f reads.json ]]; then
     extract segment $XML $dicom_dir .
 fi
 
+function processSegmentation {
+    
+        measures=${algorithm_name}${tag}_measures.json
+        printf "%-50.50s" "    Evaluate Segmentation"
+        (set -x; evaluateSegmentation \
+                     --label $label_value \
+                     --cli "$cli" \
+                     --nodule_uid "$nodule_uid" \
+                     --read_uid "$read_uid" \
+                     --measure_uid "$measure_uid" \
+                     --algorithm "${algorithm_name}" \
+                     ${algorithm_name}${suffix} \
+                     ${ground_truth} \
+                     ${measures}) > log/${algorithm_name}${tag}_evaluate.log 2>&1
+        if [[ $? -eq 0 ]]; then
+            printf "%s\n" " ... Passed"
+        else
+            printf "%s\n" " ... ${red_text}FAILED${normal_text}"
+            writeError "${algorithm_name}${tag}_measures" "${algorithm_name}${tag}_measures.log"
+        fi
+
+        printf "%-50.50s" "    Evaluate Features"
+        features=${algorithm_name}${tag}_features.json
+        (set -x; computeRadiomics \
+                     --nodule_uid "$nodule_uid" \
+                     --read_uid "$read_uid" \
+                     --algorithm "${algorithm_name}" \
+                     --label $label_value \
+                     image.nii.gz \
+                     ${algorithm_name}${suffix} \
+                     ${features}) > log/${algorithm_name}${tag}_features.log 2>&1
+        if [[ $? -eq 0 ]]; then
+            printf "%s\n" " ... Passed"
+        else
+            printf "%s\n" " ... ${red_text}FAILED${normal_text}"
+            writeError "${algorithm_name}${tag}_features" "${algorithm_name}${tag}_features.log"
+        fi
+}
+
+
+
 for read_id in $(jq -r ".reads[].id" reads.json); do
     read=$(jq ".reads[] | select(.id == $read_id)" reads.json)
     read_uid=$(echo $read | jq -r ".uid")
@@ -122,6 +163,32 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
         suffix=${tag}.nii.gz
 
         printf "Processing Read: $read_id -- Normalized Nodule: $normalized_nodule_id ($nodule_id)\n"
+
+        # Compare against the other readers
+        for other_read_id in $(jq -r ".reads[] | select ( .id != $read_id ) | .id" reads.json); do
+            # See if the other read has a normalized nodule id
+            for other_nodule_id in $(jq -r ".reads[] | select ( .id == $other_read_id ) | .nodules[] | select ( .normalized_nodule_id == $normalized_nodule_id) | .normalized_nodule_id " reads.json); do
+                # Extract the right segmentation from the other
+                printf "%-50.50s" "  Manual segmentation read $other_read_id"
+                algorithm_name=Manual_$other_read_id
+                measure_uid=${nodule_uid}-${algorithm}
+                cli="read_$other_read_id.nii.gz $other_nodule_id ${algorithm_name}${suffix}"
+                (set -x; manualSegmentation \
+                      read_$other_read_id.nii.gz $other_nodule_id ${algorithm_name}${suffix}
+                ) > log/${algorithm_name}${tag}.log 2>&1
+                if [[ $? -eq 0 ]]; then
+                    printf " ... Passed\n"
+                else
+                    printf " ... ${red_text}FAILED${normal_text}\n"
+                    writeError "${algorithm_name}${tag}" "${algorithm_name}${tag}.log"
+                fi
+                # Evaluate and run the radiomics
+                if [[ $? -eq 0 ]]; then
+                    processSegmentation
+                fi
+            done
+        done
+
         for algorithm in $algorithm_dir/*; do
             algorithm_name=$(basename $algorithm)
             printf "%-50.50s" "  Executing $algorithm_name"
@@ -144,48 +211,21 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
 
             cli="$algorithm --dicom $dicom_dir --read $read_id --nodule $normalized_nodule_id --segmentation_path `pwd` --ground_truth $ground_truth --label_value $label_value $dir/image.nii.gz $centroid_x $centroid_y $centroid_z ${algorithm_name}${suffix}"
             measure_uid=$(echo $cli | shasum | awk '{print $1}')
+            measure_uid=${nodule_uid}-${algorithm_name}
             
             # Evaluate and run the radiomics
             if [[ $? -eq 0 ]]; then
-                measures=${algorithm_name}${tag}_measures.json
-                printf "%-50.50s" "    Evaluate Segmentation"
-                (set -x; evaluateSegmentation \
-                    --label $label_value \
-                    --cli "$cli" \
-                    --nodule_uid "$nodule_uid" \
-                    --read_uid "$read_uid" \
-                    --measure_uid "$measure_uid" \
-                    --algorithm "${algorithm_name}" \
-                    ${algorithm_name}${suffix} \
-                    ${ground_truth} \
-                    ${measures}) > log/${algorithm_name}${tag}_evaluate.log 2>&1
-                if [[ $? -eq 0 ]]; then
-                    printf "%s\n" " ... Passed"
-                else
-                    printf "%s\n" " ... ${red_text}FAILED${normal_text}"
-                    writeError "${algorithm_name}${tag}_measures" "${algorithm_name}${tag}_measures.log"
-                fi
-
-                printf "%-50.50s" "    Evaluate Features"
-                features=${algorithm_name}${tag}_features.json
-                (set -x; computeRadiomics \
-                    --nodule_uid "$nodule_uid" \
-                    --read_uid "$read_uid" \
-                    --algorithm "${algorithm_name}" \
-                    --label $label_value \
-                    image.nii.gz \
-                    ${algorithm_name}${suffix} \
-                    ${features}) > log/${algorithm_name}${tag}_features.log 2>&1
-                if [[ $? -eq 0 ]]; then
-                    printf "%s\n" " ... Passed"
-                else
-                    printf "%s\n" " ... ${red_text}FAILED${normal_text}"
-                    writeError "${algorithm_name}${tag}_features" "${algorithm_name}${tag}_features.log"
-                fi
+                processSegmentation
             fi
+
         done
+
+        
     done
 done
+
+rm -rf $dicom_dir
+
 touch finished
 
 
