@@ -65,6 +65,17 @@ if [[ ! -e jq ]]; then
     chmod 755 jq
 fi
 
+cd
+if [[ ! -e sqlite3 ]]; then
+    wget https://sqlite.org/2016/sqlite-amalgamation-3150000.zip
+    unzip sqlite-amalgamation-3150000.zip
+    cd sqlite-amalgamation-3150000
+    cc -o sqlite3 sqlite3.c shell.c -lpthread -ldl
+    cp sqlite3 ../
+    cd ..
+    rm -rf sqlite-amalgamation-3150000*
+fi
+
 ### Build the python virtual environment
 cd
 virtualenv lidc-venv
@@ -113,6 +124,9 @@ rsync -ar /usr/lib/jvm /vagrant/ClusterSoftware/
 
 # jq
 rsync -ar jq /vagrant/ClusterSoftware/bin
+
+# sqlite3
+rsync -ar sqlite3 /vagrant/ClusterSoftware/bin
 
 # Install everything locally
 sudo ln --symbolic /vagrant/ClusterSoftware /software
