@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# Options are:
+# -d|--dicom path             -- path to dicom directory
+# -r|--read read              -- read number
+# -n|--nodule nodule          -- nodule number
+# -s|--segmentation_path path -- path to segmentation directory
+# -g|--ground_truth path      -- path to ground truth NIfTI
+# -l|--label label            -- label_value of ground truth voxel
+
+# Arguments are:
+# input_image  -- NIfTI volume
+# cx cy cz     -- centroid x,y,z in image coordinates
+# output_path  -- path where NIfTI volumes should be written in the form
+
+dicom_path=""
+read_number=""
+nodule_number=""
+segmentation_path=""
+ground_truth=""
+label_value=""
+
+while :
+do
+    case "$1" in
+        -d | --dicom)
+            dicom_path="$2"
+            shift 2
+            ;;
+        -r | --read)
+            read_number="$2"
+            shift 2
+            ;;
+        -n | --nodule)
+            nodule_number="$2"
+            shift 2
+            ;;
+        -s | --segmentation_path)
+            segmentation_path="$2"
+            shift 2
+            ;;
+        -g | --ground_truth)
+            ground_truth="$2"
+            shift 2
+            ;;
+        -l | --label_value)
+            label_value="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break;
+            ;;
+        *) # no more options
+            break
+            ;;
+    esac
+done
+
+input_image=$1
+cx=$2
+cy=$3
+cz=$4
+output_path=$5
+
+GenerateLesionSegmentation -i $input_image -o $output_path --seeds $cx,$cy,$cz --fulloutput

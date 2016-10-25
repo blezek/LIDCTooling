@@ -1,0 +1,21 @@
+#!/usr/bin/env python
+
+import getopt
+import SimpleITK as sitk
+import sys,os,json
+import math
+
+
+# Parse
+args = sys.argv[1:]
+
+if len(args) < 3:
+    sys.exit(1)
+
+# Load the input image
+image = sitk.ReadImage ( args[0] )
+label = float(args[1])
+out = args[2]
+
+image = sitk.BinaryThreshold(image, lowerThreshold=label, upperThreshold=label)
+sitk.WriteImage(image, out, True)
