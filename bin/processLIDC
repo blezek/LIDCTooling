@@ -127,7 +127,6 @@ function processSegmentation {
         printf "%-50.50s" "    Evaluate Features"
         features=${algorithm_name}${tag}_features.json
         (set -x; computeRadiomics \
-                     --no-crop \
                      --nodule_uid "$nodule_uid" \
                      --read_uid "$read_uid" \
                      --algorithm "${algorithm_name}" \
