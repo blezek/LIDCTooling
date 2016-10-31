@@ -36,7 +36,7 @@ if [ `uname` = 'Linux' ]; then
 
     # Linux paths
     export JAVA_HOME=/software/jvm/jdk1.8.0_20
-    export PATH=$PATH:$JAVA_HOME/bin:/software/bin:/software/python
+    export PATH=$JAVA_HOME/bin:/software/bin:/software/python:$PATH
     export LD_LIBRARY_PATH=/software/lib
     export JAVA_OPTS="-Xmx2g"
     # Python Virtual env
@@ -127,6 +127,7 @@ function processSegmentation {
         printf "%-50.50s" "    Evaluate Features"
         features=${algorithm_name}${tag}_features.json
         (set -x; computeRadiomics \
+                     --no-crop \
                      --nodule_uid "$nodule_uid" \
                      --read_uid "$read_uid" \
                      --algorithm "${algorithm_name}" \
@@ -171,7 +172,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
                 # Extract the right segmentation from the other
                 printf "%-50.50s" "  Manual segmentation read $other_read_id"
                 algorithm_name=Manual_$other_read_id
-                measure_uid=${nodule_uid}-${algorithm}
+                measure_uid=${nodule_uid}-${algorithm_name}
                 cli="read_$other_read_id.nii.gz $other_nodule_id ${algorithm_name}${suffix}"
                 (set -x; manualSegmentation \
                       read_$other_read_id.nii.gz $other_nodule_id ${algorithm_name}${suffix}
@@ -210,7 +211,6 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
             fi
 
             cli="$algorithm --dicom $dicom_dir --read $read_id --nodule $normalized_nodule_id --segmentation_path `pwd` --ground_truth $ground_truth --label_value $label_value $dir/image.nii.gz $centroid_x $centroid_y $centroid_z ${algorithm_name}${suffix}"
-            measure_uid=$(echo $cli | shasum | awk '{print $1}')
             measure_uid=${nodule_uid}-${algorithm_name}
             
             # Evaluate and run the radiomics
@@ -224,7 +224,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
     done
 done
 
-rm -rf $dicom_dir
+# rm -rf $dicom_dir
 
 touch finished
 

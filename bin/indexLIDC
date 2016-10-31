@@ -38,16 +38,35 @@ main() {
     wd=$(pwd)
     # Index the reads
     for dir in segmented/*; do
+        cd $wd
         indexRead $dir
         cd $wd
         indexFeatures $dir
         cd $wd
-        captureErrors $dir
+        indexMeasures $dir
         cd $wd
+        captureErrors $dir
     done
     
 }
 
+
+function indexMeasures {
+    dir=$1
+    cd $dir
+    # Process all the measures
+    printf "Measures"
+    for fid in *_measures.json; do
+        printf "."
+        uid=$(jq -r '"\(.algorithm)-\(.nodule_uid)"' $fid)
+        getValues $fid . $uid measures
+        getValues $fid .measures $uid measures
+        sqlite3 $DB <<EOF
+update measures set path = '$dir' where uid = '$uid';
+EOF
+    done
+    printf "\n"
+}
 
 function indexRead {
     dir=$1
@@ -74,18 +93,6 @@ EOF
         printf "\n"
     done
 
-    # Process all the measures
-    printf "Measures"
-    for fid in *_measures.json; do
-        printf "."
-        uid=$(jq -r '"\(.algorithm)-\(.nodule_uid)"' $fid)
-        getValues $fid . $uid measures
-        getValues $fid .measures $uid measures
-        sqlite3 $DB <<EOF
-update measures set path = '$dir' where uid = '$uid';
-EOF
-    done
-    printf "\n"
     
     #     read=$(jq ".reads[] | select(.id == $read_id)" reads.json)
     #     read_uid=$(echo $read | jq -r ".uid")
@@ -104,9 +111,10 @@ function indexFeatures {
         printf "."
         uid=$(jq -r '"\(.algorithm)-\(.nodule_uid)"' $fid)
         getValues $fid . $uid features
-        for t in first_order glcm glszm rlgl shape; do
-            getValues $fid .${t} $uid features
-        done
+        getValues $fid ".first_order, .glcm, .glszm, .rlgl, .shape" $uid features
+        # for t in first_order glcm glszm rlgl shape; do
+        #     getValues $fid .${t} $uid features
+        # done
     done
     printf "\n"
 }
@@ -122,8 +130,9 @@ function captureErrors {
     for i in `seq 0 $length`; do
         uid=$(uuidgen)
         getValues error.json ".errors[$i]" $uid errors
+        p=$(jq -r ".errors[$i].log" error.json)
         sqlite3 $DB <<EOF
-update errors set path = '$dir' where uid = '$uid';
+update errors set path = '$dir/$p' where uid = '$uid';
 EOF
     done
 }
@@ -142,16 +151,18 @@ function getValues {
     sqlite3 $DB <<EOF
 insert or ignore into $table ( uid ) values ( '$uid' );
 EOF
-    # Get all the keys
+    sql=""
+    # Get all the keys, but ignore keys named "uid"
     for key in $(jq -r "$path | keys | .[]" $file); do
-        if [[ $tableinfo == *${key}* ]]; then
+        if [[ $tableinfo == *${key}* ]] && [[ $key != "uid" ]]; then
             value=$(jq -r "$path | .[\"$key\"] // \"\" " $file | sed "s/'/''/g")
-            # echo $key
-            sqlite3 $DB <<EOF
- update or ignore $table set $key = '$value' where uid = '$uid';
-EOF
+            sql+="update or ignore $table set $key = '$value' where uid = '$uid'; "
         fi
     done
+    echo $sql | sqlite3 $DB
+#     <<EOF
+#  update or ignore $table set $key = '$value' where uid = '$uid';
+# EOF
 }
 
 function createDB {
@@ -453,11 +464,12 @@ create table if not exists features (
   );
 
 EOF
-tableinfo=""
+tableinfo=" "
 for table in measures nodules reads series errors features; do
-    tableinfo+=$(sqlite3 -separator : $DB "pragma table_info($table)" | tail -n +1 | awk -F':' '{print $2}'  )
+    tableinfo+=$(sqlite3 -separator : $DB "pragma table_info($table)" | tail -n +1 | awk -F':' '{print " ", $2}'  )
 done
-
+# Remove uid, including at the beginning of the string
+tableinfo=$(echo $tableinfo | sed 's/[[:space:]]uid//g' | sed 's/^uid//g')
 sqlite3 $DB "delete from errors;"
 }
 
