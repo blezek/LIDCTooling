@@ -51,3 +51,5 @@ cluster-loadbalance:
 
 cluster-install:
 	devops/cluster-install.sh ${CLUSTER}
+
+.PHONY: build
