@@ -7,6 +7,49 @@ import SimpleITK as sitk
 import sys, os
 import getopt,json
 import logging
+import numpy
+
+
+def cropToTumorMask(imageNode, maskNode, label=1, pad=5):
+  """
+  Create a sitkImage of the segmented region of the image based on the input label.
+
+  Create a sitkImage of the labelled region of the image, cropped to have a
+  cuboid shape equal to the ijk boundaries of the label.
+
+  Returns both the cropped version of the image and the cropped version of the labelmap.
+  """
+
+  oldMaskID = maskNode.GetPixelID()
+  maskNode = sitk.Cast(maskNode, sitk.sitkInt32)
+  size = numpy.array(maskNode.GetSize())
+
+  #Determine bounds
+  lsif = sitk.LabelStatisticsImageFilter()
+  lsif.Execute(imageNode, maskNode)
+  bb = numpy.array(lsif.GetBoundingBox(label))
+
+  # Expand the bounds
+  bb = bb + [-pad, pad, -pad, pad, -pad, pad]
+  
+  ijkMinBounds = bb[0::2]
+  ijkMaxBounds = size - bb[1::2] - 1
+
+  #Crop Image
+  print('Cropping to size %s' % (bb[1::2] - bb[0::2] + 1))
+  print('min bounds %s' % (bb[1::2]))
+  print('max bounds %s' % (bb[0::2]))
+  print('bounding box %s' % (bb))
+  cif = sitk.CropImageFilter()
+  cif.SetLowerBoundaryCropSize(ijkMinBounds)
+  cif.SetUpperBoundaryCropSize(ijkMaxBounds)
+  croppedImageNode = cif.Execute(imageNode)
+  croppedMaskNode = cif.Execute(maskNode)
+
+  croppedMaskNode = sitk.Cast(croppedMaskNode, oldMaskID)
+
+  return croppedImageNode, croppedMaskNode
+
 
 
 usage = """
@@ -66,14 +109,15 @@ image = sitk.ReadImage(imageName)
 mask = sitk.ReadImage(maskName)
 
 mask = sitk.BinaryThreshold(mask,1, 10000, 1, 0)
-# sitk.WriteImage(mask, 'mask.nii')
+sitk.WriteImage(mask, 'mask.nii.gz')
 
 # Crop
 if not '--no-crop' in opts:
   logging.info("Cropping image and mask")
-  image, mask = imageoperations.cropToTumorMask(image, mask)
-  sitk.WriteImage(image, 'cropped_image.nii')
-  sitk.WriteImage(mask, 'cropped_mask.nii')
+  # image, mask = imageoperations.cropToTumorMask(image, mask)
+  image, mask = cropToTumorMask(image, mask)
+  sitk.WriteImage(image, 'cropped_image.nii.gz')
+  sitk.WriteImage(mask, 'cropped_mask.nii.gz')
 
 
 
@@ -101,24 +145,11 @@ for (key,val) in firstOrderFeatures.featureValues.iteritems():
   logging.info( '  ' + key + ':' + str(val))
   fof[key] = val
 
-  # now calculate the LoG features, following
-  # steps and parameters as specified by @vnarayan13 in #22
-  # 1. Get the LoG filtered image
-  mmif = sitk.MinimumMaximumImageFilter()
-  mmif.Execute(image)
-  lowerThreshold = 0
-  upperThreshold = mmif.GetMaximum()
-
-  threshImage = imageoperations.applyThreshold(image,lowerThreshold=lowerThreshold, upperThreshold=upperThreshold,outsideValue=0)
-  # get the mask of the thresholded pixels
-  threshImageMask = imageoperations.applyThreshold(image,lowerThreshold=lowerThreshold, upperThreshold=upperThreshold,outsideValue=0,insideValue=1)
-  # only include the voxels that are within the threshold
-  threshMask = sitk.Cast(mask,1) & sitk.Cast(threshImageMask,1)
   import numpy
   sigmaValues = numpy.arange(5.,0.,-.5)[::1]
   for sigma in sigmaValues:
     logImage = imageoperations.applyLoG(image,sigmaValue=sigma)
-    logFirstorderFeatures = firstorder.RadiomicsFirstOrder(logImage,threshMask)
+    logFirstorderFeatures = firstorder.RadiomicsFirstOrder(logImage,mask)
     logFirstorderFeatures.enableAllFeatures()
     logFirstorderFeatures.calculateFeatures()
     logging.info( 'Calculated firstorder features with LoG sigma ' + str(sigma))

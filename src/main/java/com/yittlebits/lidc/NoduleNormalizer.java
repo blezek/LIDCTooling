@@ -24,8 +24,8 @@ public class NoduleNormalizer {
       }
     }
     if (minDistance > distanceThreshold || matchIdx == -1) {
-      // Insert first one
-      matchIdx = nodules.size();
+      // Insert first one, first index should be '1'
+      matchIdx = nodules.size() + 1;
       nodules.put(matchIdx, pt);
 
     }

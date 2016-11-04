@@ -49,7 +49,7 @@ else
     # Mac path
     PATH=`pwd`/build/install/LIDCTooling/bin:$PATH
     PATH=`pwd`/../ChestImagingPlatform/build/CIP-build/bin/:`pwd`/python/:${PATH}
-    XMLORIG=ClusterSoftware/tcia-lidc-xml/157/158.xml
+    XMLORIG=`pwd`/ClusterSoftware/$(sed "${JOBID}q;d" `pwd`/ClusterSoftware/lidc.txt)
 fi
 
 # Color info from http://stackoverflow.com/a/5413029/334619
@@ -60,8 +60,12 @@ normal_text=$(tput sgr0)
 ## The XML file to process
 SeriesInstanceUID=$(extract SeriesInstanceUID $XMLORIG)
 
+dicom_dir=/tmp/dicom/$SeriesInstanceUID
 dicom_dir=`pwd`/dicom/$SeriesInstanceUID
+
 dir=`pwd`/segmented/$SeriesInstanceUID
+
+echo Processing in $dir
 
 ## Download from LIDC
 APIKey="864dcc73-ce40-4f19-8a3e-fce71fc2dba2"
@@ -172,19 +176,17 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
                 printf "%-50.50s" "  Manual segmentation read $other_read_id"
                 algorithm_name=Manual_$other_read_id
                 measure_uid=${nodule_uid}-${algorithm_name}
-                cli="read_$other_read_id.nii.gz $other_nodule_id ${algorithm_name}${suffix}"
+                cli="read_$other_read_id.nii.gz $label_value ${algorithm_name}${suffix}"
                 (set -x; manualSegmentation \
-                      read_$other_read_id.nii.gz $other_nodule_id ${algorithm_name}${suffix}
+                      read_$other_read_id.nii.gz $label_value ${algorithm_name}${suffix}
                 ) > log/${algorithm_name}${tag}.log 2>&1
                 if [[ $? -eq 0 ]]; then
                     printf " ... Passed\n"
+                    # Evaluate and run the radiomics
+                    processSegmentation
                 else
                     printf " ... ${red_text}FAILED${normal_text}\n"
                     writeError "${algorithm_name}${tag}" "${algorithm_name}${tag}.log"
-                fi
-                # Evaluate and run the radiomics
-                if [[ $? -eq 0 ]]; then
-                    processSegmentation
                 fi
             done
         done
@@ -204,27 +206,19 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
                 ${algorithm_name}${suffix}) > log/${algorithm_name}${tag}.log 2>&1
             if [[ $? -eq 0 ]]; then
                 printf " ... Passed\n"
+                cli="$algorithm --dicom $dicom_dir --read $read_id --nodule $normalized_nodule_id --segmentation_path `pwd` --ground_truth $ground_truth --label_value $label_value $dir/image.nii.gz $centroid_x $centroid_y $centroid_z ${algorithm_name}${suffix}"
+                measure_uid=${nodule_uid}-${algorithm_name}
+                # Evaluate and run the radiomics
+                processSegmentation
             else
                 printf " ... ${red_text}FAILED${normal_text}\n"
                 writeError "${algorithm_name}${tag}" "${algorithm_name}${tag}.log"
             fi
-
-            cli="$algorithm --dicom $dicom_dir --read $read_id --nodule $normalized_nodule_id --segmentation_path `pwd` --ground_truth $ground_truth --label_value $label_value $dir/image.nii.gz $centroid_x $centroid_y $centroid_z ${algorithm_name}${suffix}"
-            measure_uid=${nodule_uid}-${algorithm_name}
-            
-            # Evaluate and run the radiomics
-            if [[ $? -eq 0 ]]; then
-                processSegmentation
-            fi
-
         done
-
-        
     done
 done
 
 # rm -rf $dicom_dir
-
 touch finished
 
 
