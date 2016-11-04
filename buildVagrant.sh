@@ -10,18 +10,8 @@ NPROC=`getconf _NPROCESSORS_ONLN`
 ### Install our packages
 sudo apt-get update 
 sudo apt-get install -y cmake curl git subversion clang freeglut3-dev libxml2-dev g++ python-pip python-virtualenv python-dev
-sudo apt-get install -y golang jq unzip
+sudo apt-get install -y jq unzip
 # freeglut3-dev brings in OpenGL
-
-### Go
-if [[ ! -e /usr/local/go/bin/go  ]]; then
-   curl -L -O "https://storage.googleapis.com/golang/go1.7.1.linux-amd64.tar.gz"
-   sudo tar -C /usr/local -xzf go1.7.1.linux-amd64.tar.gz
-   cat >> .bashrc <<EOF
-export PATH=/usr/local/go/bin:$PATH
-EOF
-   . .bashrc
-fi
 
 ### Java
 if [[ ! -e /usr/lib/jvm  ]]; then
@@ -57,7 +47,8 @@ cd LIDCTooling
 make build
 ./gradlew installDist
 
-
+# jq and SQLite3 are not installed on the StarCluster machines
+# so build and install
 cd
 if [[ ! -e jq ]]; then
     wget https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
@@ -129,4 +120,4 @@ rsync -ar jq /vagrant/ClusterSoftware/bin
 rsync -ar sqlite3 /vagrant/ClusterSoftware/bin
 
 # Install everything locally
-sudo ln --symbolic /vagrant/ClusterSoftware /software
+sudo ln --force --symbolic /vagrant/ClusterSoftware /software
