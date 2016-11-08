@@ -20,3 +20,8 @@ documentation/public
 sc-env
 analysis/*.csv
 analysis/*.png
+*.nii.gz
+*.db
+*.nii
+experiments*
+/bin/

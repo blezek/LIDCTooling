@@ -41,7 +41,7 @@ fi
 
 ### Build the LIDC code
 cd
-rsync --exclude ClusterSoftware --exclude segmented --exclude dicom -ra /vagrant/ LIDCTooling
+rsync --exclude ClusterSoftware --exclude segmented --exclude dicom --exclude '*journal' -ra /vagrant/ LIDCTooling
 
 cd LIDCTooling
 make build

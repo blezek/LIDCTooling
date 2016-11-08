@@ -44,7 +44,7 @@ main() {
 
     printf "Collect LIDC Results\n"
     createDB
-    printf "Created database: %s\n" %DB
+    printf "Created database: %s\n" $DB
     wd=$(pwd)
     printf "Indexing reads"
     # Index the reads
@@ -53,7 +53,8 @@ main() {
             printf "."
             sqlite3 $DB < $dir/results.sql
             if [[ $? -ne 0 ]]; then
-                printf "\n\n====\nFailed:\n$dir\n====\n\n" $dir
+                local sge=$(sqlite3 map.db "select id from map where dir='$dir'" )
+                printf "\n\n====\nFailed:\n%s\nexport SGE_TASK_ID=%s ./processLIDC\n====\n\n" $dir $sge
             fi
 
         fi

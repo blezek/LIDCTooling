@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cluster=$1
+cluster=${1:-lidc}
 
 source venv/bin/activate
 cluster_meta="$(starcluster listclusters $cluster 2>&1)"
@@ -13,8 +13,7 @@ ssh-add  ~/.ssh/radiomics.rsa
 rsync -arv algorithms ClusterSoftware/
 rsync -arv --delete --exclude "*.a" ClusterSoftware/ root@$MASTER:/software/
 rsync -arv devops/*.sh sgeadmin@$MASTER:
-rsync -arv bin/processLIDC sgeadmin@$MASTER:
-rsync -arv bin/indexLIDC sgeadmin@$MASTER:
+rsync -arv *LIDC sgeadmin@$MASTER:
 
-rsync -arv sgeadmin@$MASTER:lidc.db .
+# rsync -arv sgeadmin@$MASTER:lidc.db .
 

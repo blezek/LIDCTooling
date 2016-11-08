@@ -45,11 +45,15 @@ if [ `uname` = 'Linux' ]; then
     # Get the XML file to run
     XMLORIG=/software/$(sed "${JOBID}q;d" /software/lidc.txt)
     algorithm_dir=/software/algorithms
+    CLEANUP=1
+    DICOM_PREFIX=/tmp
 else
     # Mac path
     PATH=`pwd`/build/install/LIDCTooling/bin:$PATH
     PATH=`pwd`/../ChestImagingPlatform/build/CIP-build/bin/:`pwd`/python/:${PATH}
     XMLORIG=`pwd`/ClusterSoftware/$(sed "${JOBID}q;d" `pwd`/ClusterSoftware/lidc.txt)
+    CLEANUP=0
+    DICOM_PREFIX=`pwd`
 fi
 
 # Color info from http://stackoverflow.com/a/5413029/334619
@@ -57,12 +61,19 @@ blue_text=$(tput setaf 4)
 red_text=$(tput setaf 1)
 normal_text=$(tput sgr0)
 
+# Cleanup code
+function cleanup {
+    if [[ $CLEANUP == 1 ]]; then
+        printf 'Deleting DICOM:\n%s\n' $dicom_dir
+        rm -rf $dicom_dir
+    fi        
+}
+trap cleanup EXIT
+
 ## The XML file to process
 SeriesInstanceUID=$(extract SeriesInstanceUID $XMLORIG)
 
-dicom_dir=/tmp/dicom/$SeriesInstanceUID
-dicom_dir=`pwd`/dicom/$SeriesInstanceUID
-
+dicom_dir=$DICOM_PREFIX/dicom/$SeriesInstanceUID
 dir=`pwd`/segmented/$SeriesInstanceUID
 
 echo Processing in $dir
@@ -95,15 +106,19 @@ fi
 
 # Get the images from TCIA
 if [[ ! -d $dicom_dir ]]; then
-    echo Download DICOM from TCIA
+    printf "Download DICOM from TCIA:\n%s\n" $dicom_dir
     mkdir -p $dicom_dir
-    curl --silent -o images.zip  -H "api_key: $APIKey" "$baseURL/query/getImage?SeriesInstanceUID=$SeriesInstanceUID&api_key=$APIKey"
-    unzip -o -q images.zip -d $dicom_dir
-    rm -f images.zip
+
+    zip=$(mktemp -t imagesXXXX).zip
+    
+    curl --silent -o $zip  -H "api_key: $APIKey" "$baseURL/query/getImage?SeriesInstanceUID=$SeriesInstanceUID&api_key=$APIKey"
+    echo curl --silent -o $zip  -H "api_key: $APIKey" "$baseURL/query/getImage?SeriesInstanceUID=$SeriesInstanceUID&api_key=$APIKey"
+    unzip -o -q $zip -d $dicom_dir
+    rm -f $zip
 fi
 
 if [[ ! -f reads.json ]]; then
-    echo Segmenting DICOM
+    printf "Segmenting DICOM:\n%s\n" $dicom_dir
     extract segment $XML $dicom_dir .
 fi
 
@@ -146,7 +161,10 @@ function processSegmentation {
         fi
 }
 
-
+if [[ ! -f reads.json ]]; then
+    (>&2 printf "reads.json does not exist, exiting\n")
+    exit 1
+fi
 
 for read_id in $(jq -r ".reads[].id" reads.json); do
     read=$(jq ".reads[] | select(.id == $read_id)" reads.json)
@@ -218,7 +236,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
     done
 done
 
-# rm -rf $dicom_dir
+gzip $dir/log/*
 touch finished
 
 

@@ -96,7 +96,7 @@ function indexRead {
     cd $dir
     if [[ ! -f reads.json ]]; then
         # see http://stackoverflow.com/a/23550347/334619
-        (>&2 printf "reads.json does not exist, exiting")
+        (>&2 printf "reads.json does not exist, exiting\n")
         exit 1
     fi
     getValues reads.json . $(jq -r .uid reads.json) series
