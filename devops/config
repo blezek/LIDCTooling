@@ -136,7 +136,7 @@ EXTENDS=smallcluster
 # 4 cores, 15G
 NODE_INSTANCE_TYPE=c3.xlarge
 CLUSTER_SiZE=20
-SPOT_BID=0.15
+SPOT_BID=0.08
 FORCE_SPOT_MASTER=false
 
 [cluster memory]
