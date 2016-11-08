@@ -1,0 +1,42 @@
+#!/bin/bash
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+# set -uo pipefail
+IFS=$'\n\t'
+
+# This script creates an SQLite DB mapping dicom, segmented, SGE Task ID, xml, etc.
+
+# Some variables
+# Mac path
+PATH=`pwd`/build/install/LIDCTooling/bin:$PATH
+PATH=`pwd`/../ChestImagingPlatform/build/CIP-build/bin/:`pwd`/python/:${PATH}
+
+DB=${1:-map.db}
+
+# Create the tables
+sqlite3 $DB <<EOF
+create table if not exists map (
+  id int primary key,
+  series_instance_uid text,
+  dicom_dir text,
+  dir text,
+  xml text
+);
+EOF
+
+printf "Creating map"
+for JOBID in {1..1318}; do
+    XML=$(sed "${JOBID}q;d" `pwd`/ClusterSoftware/lidc.txt)
+    XMLORIG=`pwd`/ClusterSoftware/$XML
+    ## The XML file to process
+    SeriesInstanceUID=$(extract SeriesInstanceUID $XMLORIG)
+    dicom_dir=dicom/$SeriesInstanceUID
+    dir=segmented/$SeriesInstanceUID
+    sqlite3 $DB <<EOF
+delete from map where id = $JOBID;
+insert into map ( id, series_instance_uid, dicom_dir, dir, xml ) values
+( $JOBID, '$SeriesInstanceUID', '$dicom_dir', '$dir', '$XML');
+EOF
+    printf "."
+done
+
+printf "\n"
