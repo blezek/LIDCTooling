@@ -25,3 +25,9 @@ analysis/*.png
 *.nii
 experiments*
 /bin/
+EclipseDebugConfigurations
+plots
+.RData
+.Rhistory
+.ipynb_checkpoints
+screen_shots
