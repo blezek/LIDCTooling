@@ -186,8 +186,8 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
 
         printf "Processing Read: $read_id -- Normalized Nodule: $normalized_nodule_id ($nodule_id)\n"
 
-        # Compare against the other readers
-        for other_read_id in $(jq -r ".reads[] | select ( .id != $read_id ) | .id" reads.json); do
+        # Generate manual segmentations
+        for other_read_id in $(jq -r ".reads[] | .id" reads.json); do
             # See if the other read has a normalized nodule id
             for other_nodule_id in $(jq -r ".reads[] | select ( .id == $other_read_id ) | .nodules[] | select ( .normalized_nodule_id == $normalized_nodule_id) | .normalized_nodule_id " reads.json); do
                 # Extract the right segmentation from the other
@@ -236,7 +236,7 @@ for read_id in $(jq -r ".reads[].id" reads.json); do
     done
 done
 
-gzip $dir/log/*
+gzip -f $dir/log/*
 touch finished
 
 
