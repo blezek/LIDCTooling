@@ -1,0 +1,14 @@
+#!/bin/bash
+
+
+DB=${1:-lidc.db}
+
+
+tableinfo=" "
+for table in measures nodules reads series errors features; do
+    tableinfo+=$(sqlite3 -separator : $DB "pragma table_info($table)" | tail -n +1 | awk -F':' '{print " ", $2}'  )
+done
+# Remove uid, including at the beginning of the string
+tableinfo=$(echo $tableinfo | sed 's/[[:space:]]uid//g' | sed 's/^uid//g')
+echo $tableinfo
+
