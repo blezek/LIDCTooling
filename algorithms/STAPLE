@@ -59,7 +59,7 @@ for f in reads:
 
 if len(inputs) < 2:
     print ( "STAPLE requires more than 2 inputs!" )
-    exit 1
+    sys.exit(1)
     
 staple = sitk.STAPLEImageFilter()
 staple.SetForegroundValue ( float(settings["--label_value"]) )
